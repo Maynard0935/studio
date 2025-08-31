@@ -25,6 +25,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function InventoryPage() {
   const category = CATEGORIES.find(c => c.name === categoryName);
 
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     if (!category) {
@@ -124,10 +126,11 @@ export default function InventoryPage() {
 
 
   const exportToCSV = () => {
-    if (items.length === 0) {
+    const itemsToExport = filteredItems;
+    if (itemsToExport.length === 0) {
       toast({
         title: "No Data",
-        description: "There is no inventory data in this category to export.",
+        description: "There are no items in the current filter to export.",
         variant: "destructive",
         duration: 4000
       });
@@ -135,14 +138,15 @@ export default function InventoryPage() {
     }
 
     try {
-      let csvContent = "Category,Description,Date Created,Photo Count\n";
+      let csvContent = "Category,Description,Date Created,Photo Count,Status\n";
       
-      items.forEach(item => {
+      itemsToExport.forEach(item => {
         const row = [
           `"${categoryName}"`,
           `"${item.description.replace(/"/g, '""')}"`,
           `"${new Date(item.createdAt).toLocaleString()}"`,
-          item.photos.length
+          item.photos.length,
+          `"${item.isUpdated ? 'Done Update' : 'Not Done'}"`
         ].join(',');
         csvContent += row + "\n";
       });
@@ -179,6 +183,12 @@ export default function InventoryPage() {
   if (!category) {
     return null;
   }
+  
+  const filteredItems = items.filter(item => {
+    if (filter === 'done') return item.isUpdated;
+    if (filter === 'not-done') return !item.isUpdated;
+    return true; // 'all'
+  });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -208,9 +218,17 @@ export default function InventoryPage() {
       </header>
 
       <main className="flex-1 p-4 md:p-6">
-        {items.length > 0 ? (
+        <Tabs value={filter} onValueChange={setFilter} className="w-full mb-4">
+            <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="all">All ({items.length})</TabsTrigger>
+                <TabsTrigger value="done">Done ({items.filter(i => i.isUpdated).length})</TabsTrigger>
+                <TabsTrigger value="not-done">Not Done ({items.filter(i => !i.isUpdated).length})</TabsTrigger>
+            </TabsList>
+        </Tabs>
+        
+        {filteredItems.length > 0 ? (
           <div className="space-y-6">
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <Card key={item.id} className={cn(item.isUpdated && "border-green-500")}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -279,13 +297,15 @@ export default function InventoryPage() {
             <Camera className="mx-auto h-12 w-12 text-muted-foreground" />
             <h2 className="mt-4 text-xl font-semibold">No Items Found</h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Get started by adding an item to this category.
+              {filter === 'all' && items.length === 0 ? 'Get started by adding an item to this category.' : `No items match the filter "${filter}".`}
             </p>
-            <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref className="mt-6 inline-block">
-              <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="mr-2 h-4 w-4" /> Add First Item
-              </Button>
-            </Link>
+            {filter === 'all' && items.length === 0 && (
+                <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref className="mt-6 inline-block">
+                <Button className="bg-primary hover:bg-primary/90">
+                    <Plus className="mr-2 h-4 w-4" /> Add First Item
+                </Button>
+                </Link>
+            )}
           </div>
         )}
       </main>
