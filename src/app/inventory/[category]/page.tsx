@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
@@ -233,7 +234,10 @@ export default function InventoryPage() {
                             </div>
                         </DialogTrigger>
                         <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-0 border-0">
-                            <Carousel className="w-full h-full" opts={{ loop: true }}>
+                           <DialogHeader className="sr-only">
+                              <DialogTitle>Enlarged photo preview</DialogTitle>
+                           </DialogHeader>
+                            <Carousel className="w-full h-full" opts={{ loop: item.photos.length > 1 }}>
                                 <CarouselContent className="h-full">
                                 {item.photos.map((photo, index) => (
                                     <CarouselItem key={index} className="h-full">
@@ -283,3 +287,5 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+    
