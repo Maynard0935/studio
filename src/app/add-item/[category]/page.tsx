@@ -278,7 +278,7 @@ export default function AddItemPage() {
         </Card>
       </main>
 
-      <footer className="sticky bottom-0 bg-background/80 backdrop-blur-sm p-4 border-t">
+      <footer className="sticky bottom-0 bg-background/95 backdrop-blur-sm z-10 p-4 border-t">
         <Button onClick={saveItem} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" size="lg" disabled={isSaving}>
            {isSaving ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : 'Save Item'}
         </Button>

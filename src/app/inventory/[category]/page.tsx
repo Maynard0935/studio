@@ -340,7 +340,7 @@ export default function InventoryPage() {
         )}
       </main>
 
-       <footer className="sticky bottom-0 bg-background/80 backdrop-blur-sm p-4 border-t">
+       <footer className="sticky bottom-0 bg-background/95 backdrop-blur-sm z-10 p-4 border-t">
          <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref className="w-full">
             <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" size="lg">
                  <Plus className="mr-2 h-4 w-4" /> Add New Item
