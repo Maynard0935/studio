@@ -188,12 +188,12 @@ export default function CategoriesPage() {
         <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
         <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={handleImportClick}>
-                <Upload />
+                <Download />
                 <span className="sr-only">Import Data</span>
             </Button>
             <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
             <Button variant="outline" size="icon" onClick={handleExport}>
-                <Download />
+                <Upload />
                 <span className="sr-only">Export Data</span>
             </Button>
         </div>
@@ -251,5 +251,7 @@ export default function CategoriesPage() {
       </AlertDialog>
     </div>
   );
+
+    
 
     
