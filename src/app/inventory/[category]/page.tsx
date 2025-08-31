@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, Plus, Camera, Trash2, Download, Images } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -22,6 +22,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -88,6 +91,37 @@ export default function InventoryPage() {
       });
     }
   }
+
+  const handleStatusChange = (itemId: string, isChecked: boolean) => {
+    try {
+      const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
+      const inventory: InventoryData = storedData ? JSON.parse(storedData) : {};
+      
+      const categoryItems = inventory[categoryName] || [];
+      const updatedItems = categoryItems.map(item => 
+        item.id === itemId ? { ...item, isUpdated: isChecked } : item
+      );
+      inventory[categoryName] = updatedItems;
+
+      localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(inventory));
+      setItems(updatedItems);
+      
+      toast({
+        title: "Status Updated",
+        description: `Item marked as ${isChecked ? 'Done' : 'Not Done'}.`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error("Failed to update item status", error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the item status.",
+        variant: "destructive",
+        duration: 4000,
+      });
+    }
+  };
+
 
   const exportToCSV = () => {
     if (items.length === 0) {
@@ -177,7 +211,7 @@ export default function InventoryPage() {
         {items.length > 0 ? (
           <div className="space-y-6">
             {items.map((item) => (
-              <Card key={item.id}>
+              <Card key={item.id} className={cn(item.isUpdated && "border-green-500")}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <CardDescription>{new Date(item.createdAt).toLocaleString()}</CardDescription>
@@ -206,31 +240,37 @@ export default function InventoryPage() {
                 <CardContent className="space-y-4">
                   <p>{item.description}</p>
                     {item.photos.length > 0 && (
-                      <div className="relative w-full max-w-sm mx-auto group">
-                          <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
-                              <CarouselContent>
-                              {item.photos.map((photo, index) => (
-                                  <CarouselItem key={index}>
-                                      <div className="relative aspect-video">
-                                          <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md border-2 border-white" />
-                                      </div>
-                                  </CarouselItem>
-                              ))}
-                              </CarouselContent>
-                              {item.photos.length > 1 && (
-                                  <>
-                                      <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10" />
-                                      <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10" />
-                                  </>
-                              )}
-                          </Carousel>
-                          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-sm px-2.5 py-1.5 rounded-full flex items-center gap-1.5">
-                              <Images className="h-4 w-4" />
-                              <span>{item.photos.length}</span>
-                          </div>
-                      </div>
+                     <div className="relative w-full max-w-sm mx-auto group">
+                         <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
+                             <CarouselContent>
+                             {item.photos.map((photo, index) => (
+                                 <CarouselItem key={index}>
+                                     <div className="relative aspect-video">
+                                         <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md border-2 border-white" />
+                                     </div>
+                                 </CarouselItem>
+                             ))}
+                             </CarouselContent>
+                         </Carousel>
+                         <div className="absolute bottom-2 right-2 bg-black/60 text-white text-base px-2.5 py-1.5 rounded-full flex items-center gap-1.5">
+                             <Images className="h-4 w-4" />
+                             <span>{item.photos.length}</span>
+                         </div>
+                     </div>
                   )}
                 </CardContent>
+                <div className="p-4 flex items-center space-x-2">
+                    <Checkbox
+                        id={`done-update-${item.id}`}
+                        checked={!!item.isUpdated}
+                        onCheckedChange={(checked) => {
+                            handleStatusChange(item.id, !!checked);
+                        }}
+                    />
+                    <Label htmlFor={`done-update-${item.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Done Update
+                    </Label>
+                </div>
               </Card>
             ))}
           </div>

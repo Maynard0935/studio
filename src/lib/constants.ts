@@ -24,6 +24,7 @@ export interface InventoryItem {
   description: string;
   photos: string[]; // base64 data URIs
   createdAt: string;
+  isUpdated?: boolean;
 }
 
 export type InventoryData = {

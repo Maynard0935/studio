@@ -159,6 +159,7 @@ export default function AddItemPage() {
         description,
         photos: photos,
         createdAt: new Date().toISOString(),
+        isUpdated: false,
       };
       
       const categoryItems = inventory[categoryName] || [];
