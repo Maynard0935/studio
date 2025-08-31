@@ -45,7 +45,7 @@ export default function CategoriesPage() {
 
       const inventory: InventoryData = JSON.parse(storedData);
       
-      let csvContent = "Category,Description,Date Created,Photo 1,Photo 2,Photo 3,...\n";
+      let csvContent = "Category,Description,Date Created,Photo Count\n";
       
       for (const categoryName in inventory) {
         const items = inventory[categoryName as CategoryName] || [];
@@ -54,13 +54,13 @@ export default function CategoriesPage() {
             `"${categoryName}"`,
             `"${item.description.replace(/"/g, '""')}"`,
             `"${new Date(item.createdAt).toLocaleString()}"`,
-            ...item.photos.map(p => `"${p}"`)
+            item.photos.length
           ].join(',');
           csvContent += row + "\n";
         });
       }
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-t;' });
       const link = document.createElement("a");
       if (link.download !== undefined) {
         const url = URL.createObjectURL(blob);
