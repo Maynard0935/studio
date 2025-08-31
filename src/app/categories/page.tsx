@@ -28,8 +28,9 @@ export default function CategoriesPage() {
     const [inventoryCounts, setInventoryCounts] = useState<Record<CategoryName, number>>(() =>
     Object.fromEntries(CATEGORIES.map(c => [c.name, 0])) as Record<CategoryName, number>
   );
-  const [isImporting, setIsImporting] = useState(false);
   const [importData, setImportData] = useState<string | null>(null);
+  const [showExportConfirm, setShowExportConfirm] = useState(false);
+  const [showZipConfirm, setShowZipConfirm] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,6 +50,7 @@ export default function CategoriesPage() {
   }, []);
 
   const handleExport = () => {
+    setShowExportConfirm(false);
     try {
       const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
       if (!storedData || storedData === '{}') {
@@ -89,6 +91,7 @@ export default function CategoriesPage() {
   };
   
   const downloadAllAsZip = async () => {
+    setShowZipConfirm(false);
     const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
     if (!storedData || storedData === '{}') {
       toast({ title: "No Data", description: "There is no inventory to export.", variant: "destructive", duration: 4000 });
@@ -237,11 +240,11 @@ export default function CategoriesPage() {
                 Import
             </Button>
             <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
-            <Button variant="outline" size="sm" onClick={handleExport} className="bg-primary/10 hover:bg-primary/20">
+            <Button variant="outline" size="sm" onClick={() => setShowExportConfirm(true)} className="bg-primary/10 hover:bg-primary/20">
                 <Upload className="mr-2 h-4 w-4" />
                 Export
             </Button>
-             <Button variant="outline" size="sm" onClick={downloadAllAsZip} className="bg-primary/10 hover:bg-primary/20">
+             <Button variant="outline" size="sm" onClick={() => setShowZipConfirm(true)} className="bg-primary/10 hover:bg-primary/20">
                 <FileArchive className="mr-2 h-4 w-4" />
                 Zip
             </Button>
@@ -300,8 +303,36 @@ export default function CategoriesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={showExportConfirm} onOpenChange={setShowExportConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Export</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will download a JSON file of your entire inventory. Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleExport}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showZipConfirm} onOpenChange={setShowZipConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Zip Export</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will download a ZIP file of your entire inventory, including all photos. This may take a moment. Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={downloadAllAsZip}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
-
-    
