@@ -6,8 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Plus } from 'lucide-react';
 import { CATEGORIES, type CategoryName, INVENTORY_STORAGE_KEY, type InventoryData } from '@/lib/constants';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CategoriesPage() {
+    const router = useRouter();
     const [inventoryCounts, setInventoryCounts] = useState<Record<CategoryName, number>>(() =>
     Object.fromEntries(CATEGORIES.map(c => [c.name, 0])) as Record<CategoryName, number>
   );
@@ -54,18 +56,15 @@ export default function CategoriesPage() {
                     </div>
                   </div>
                   <Button
-                    asChild
                     size="sm"
                     className="bg-accent hover:bg-accent/90 text-accent-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      window.location.href = `/add-item/${encodeURIComponent(category.name)}`;
+                      router.push(`/add-item/${encodeURIComponent(category.name)}`);
                     }}
                   >
-                    <Link href={`/add-item/${encodeURIComponent(category.name)}`}>
-                      <Plus className="mr-2 h-4 w-4" /> Add
-                    </Link>
+                    <Plus className="mr-2 h-4 w-4" /> Add
                   </Button>
                 </CardContent>
               </Card>
