@@ -185,7 +185,7 @@ export default function CategoriesPage() {
             <span className="sr-only">Back</span>
           </Button>
         </Link>
-        <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">RPCPPE</h1>
         <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={handleImportClick} className="bg-primary/10 hover:bg-primary/20">
                 <Download className="mr-2 h-4 w-4" />
