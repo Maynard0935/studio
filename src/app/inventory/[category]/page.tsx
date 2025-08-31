@@ -73,13 +73,9 @@ export default function InventoryPage() {
   }, [category, categoryName, router, toast]);
 
     useEffect(() => {
-    if (!thumbnailCarouselApi || !mainCarouselApi) {
+    if (!mainCarouselApi || !thumbnailCarouselApi) {
       return
     }
-
-    thumbnailCarouselApi.on("select", () => {
-        mainCarouselApi.scrollTo(thumbnailCarouselApi.selectedScrollSnap())
-    })
 
     mainCarouselApi.on("select", () => {
         thumbnailCarouselApi.scrollTo(mainCarouselApi.selectedScrollSnap())
@@ -238,23 +234,22 @@ export default function InventoryPage() {
                         <DialogTrigger asChild>
                             <Carousel
                                 setApi={setThumbnailCarouselApi}
+                                onClick={(e) => {
+                                    if (thumbnailCarouselApi) {
+                                        mainCarouselApi?.scrollTo(thumbnailCarouselApi.selectedScrollSnap())
+                                    }
+                                }}
                                 className="w-full max-w-sm mx-auto cursor-pointer"
                             >
                                 <CarouselContent>
                                 {item.photos.map((photo, index) => (
-                                    <CarouselItem key={index}>
+                                    <CarouselItem key={index} >
                                         <div className="relative aspect-video">
                                             <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
                                         </div>
                                     </CarouselItem>
                                 ))}
                                 </CarouselContent>
-                                {item.photos.length > 1 && (
-                                <>
-                                    <CarouselPrevious className="left-2" />
-                                    <CarouselNext className="right-2" />
-                                </>
-                                )}
                             </Carousel>
                         </DialogTrigger>
                         <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4 bg-white dark:bg-neutral-900">
@@ -312,3 +307,4 @@ export default function InventoryPage() {
       </footer>
     </div>
   );
+}
