@@ -234,7 +234,7 @@ export default function InventoryPage() {
                           </>
                         )}
                       </Carousel>
-                      <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4">
+                      <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4 bg-white dark:bg-neutral-900">
                         <DialogHeader>
                           <DialogTitle>Image Preview</DialogTitle>
                         </DialogHeader>
