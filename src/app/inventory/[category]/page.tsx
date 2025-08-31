@@ -284,9 +284,6 @@ export default function InventoryPage() {
                            <DialogHeader className="absolute top-4 left-4 z-20">
                                 <DialogTitle className="text-white">Image Preview</DialogTitle>
                            </DialogHeader>
-                           <DialogClose className="absolute top-4 right-4 z-20 text-white rounded-full bg-black/50 p-2">
-                               <X className="h-8 w-8" />
-                           </DialogClose>
                            <Carousel className="w-full h-full" opts={{ loop: item.photos.length > 1 }}>
                                <CarouselContent className="h-full">
                                    {item.photos.map((photo, index) => (
