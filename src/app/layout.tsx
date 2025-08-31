@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'SnapStock',
-  description: 'SnapStock - Physical Inventory App',
+  title: 'Physical Inventory App',
+  description: 'Physical Inventory App',
   manifest: '/manifest.webmanifest',
 };
 

@@ -231,7 +231,7 @@ export default function CategoriesPage() {
       </main>
 
       <footer className="py-6 text-center text-muted-foreground">
-        <p>PHYSICAL INVENTORY APP</p>
+        <p>Physical Inventory App</p>
       </footer>
       
       <AlertDialog open={!!importData} onOpenChange={(open) => !open && setImportData(null)}>

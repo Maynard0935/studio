@@ -12,7 +12,7 @@ export default function Home() {
         </Link>
       </main>
       <footer className="py-6 text-center text-muted-foreground">
-        <p>PHYSICAL INVENTORY APP</p>
+        <p>Physical Inventory App</p>
       </footer>
     </div>
   );
