@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
@@ -12,6 +13,16 @@ import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2 } from 'lucide-
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function AddItemPage() {
   const router = useRouter();
@@ -24,7 +35,8 @@ export default function AddItemPage() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  
+  const [photoToDeleteIndex, setPhotoToDeleteIndex] = useState<number | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -69,6 +81,7 @@ export default function AddItemPage() {
                 if (width > maxSize) {
                     height *= maxSize / width;
                     width = maxSize;
+                    
                 }
             } else {
                 if (height > maxSize) {
@@ -108,7 +121,6 @@ export default function AddItemPage() {
                 variant: "destructive",
                 duration: 4000,
             });
-            // Still add the original image if compression fails
             setPhotos((prev) => [...prev, previewImage]);
             setPreviewImage(null);
         }
@@ -123,10 +135,18 @@ export default function AddItemPage() {
   const cancelPhoto = () => {
     setPreviewImage(null);
   };
-
-  const deletePhoto = (index: number) => {
-    setPhotos((prev) => prev.filter((_, i) => i !== index));
+  
+  const handleDeleteRequest = (index: number) => {
+    setPhotoToDeleteIndex(index);
   };
+  
+  const confirmDeletePhoto = () => {
+    if (photoToDeleteIndex !== null) {
+      setPhotos((prev) => prev.filter((_, i) => i !== photoToDeleteIndex));
+      setPhotoToDeleteIndex(null);
+    }
+  };
+
 
   const saveItem = async () => {
     if (photos.length === 0) {
@@ -258,12 +278,14 @@ export default function AddItemPage() {
                         <div key={index} className="relative group aspect-square">
                             <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
                             {!isSaving && (
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
-                                <Button variant="destructive" size="icon" onClick={() => deletePhoto(index)}>
+                              <Button 
+                                variant="destructive" 
+                                size="icon" 
+                                className="absolute top-1 right-1 h-7 w-7"
+                                onClick={() => handleDeleteRequest(index)}>
                                     <Trash2 className="h-4 w-4" />
                                     <span className="sr-only">Delete photo</span>
                                 </Button>
-                              </div>
                             )}
                         </div>
                         ))}
@@ -303,6 +325,23 @@ export default function AddItemPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      <AlertDialog open={photoToDeleteIndex !== null} onOpenChange={(open) => !open && setPhotoToDeleteIndex(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this photo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPhotoToDeleteIndex(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeletePhoto}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
+    
