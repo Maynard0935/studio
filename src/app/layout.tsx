@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: 'SnapStock',
   description: 'SnapStock - Physical Inventory App',
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({
