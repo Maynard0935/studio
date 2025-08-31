@@ -185,10 +185,10 @@ export default function InventoryPage() {
   };
 
   const handleSaveEdit = (itemId: string) => {
-    if (!editedAccountableOfficer.trim() || !editedEndUser.trim() || !editedLocation.trim()) {
+    if (!editedAccountableOfficer.trim()) {
         toast({
           title: "Incomplete Details",
-          description: "Accountable Officer, End-user, and Location cannot be empty.",
+          description: "Accountable Officer cannot be empty.",
           variant: "destructive",
           duration: 4000
         });
@@ -471,5 +471,7 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+    
 
     

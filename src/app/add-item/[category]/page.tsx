@@ -162,10 +162,10 @@ export default function AddItemPage() {
       });
       return;
     }
-    if (!accountableOfficer.trim() || !endUser.trim() || !location.trim()) {
+    if (!accountableOfficer.trim()) {
         toast({
           title: "Incomplete Details",
-          description: "Please fill out Accountable Officer, End-user, and Location.",
+          description: "Please fill out the Accountable Officer field.",
           variant: "destructive",
           duration: 4000,
         });
@@ -385,5 +385,7 @@ export default function AddItemPage() {
     </div>
   );
 }
+
+    
 
     
