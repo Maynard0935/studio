@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 
 
 export default function InventoryPage() {
@@ -43,7 +44,11 @@ export default function InventoryPage() {
   const [isZoomed, setIsZoomed] = useState(false);
   const [transform, setTransform] = useState({ x: 0, y: 0 });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [editedDescription, setEditedDescription] = useState('');
+  
+  const [editedAccountableOfficer, setEditedAccountableOfficer] = useState('');
+  const [editedEndUser, setEditedEndUser] = useState('');
+  const [editedLocation, setEditedLocation] = useState('');
+  const [editedMoreDetails, setEditedMoreDetails] = useState('');
 
   const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -169,19 +174,21 @@ export default function InventoryPage() {
 
   const handleEdit = (item: InventoryItem) => {
     setEditingItemId(item.id);
-    setEditedDescription(item.description);
+    setEditedAccountableOfficer(item.accountableOfficer);
+    setEditedEndUser(item.endUser);
+    setEditedLocation(item.location);
+    setEditedMoreDetails(item.moreDetails);
   };
 
   const handleCancelEdit = () => {
     setEditingItemId(null);
-    setEditedDescription('');
   };
 
   const handleSaveEdit = (itemId: string) => {
-    if (!editedDescription.trim()) {
+    if (!editedAccountableOfficer.trim() || !editedEndUser.trim() || !editedLocation.trim()) {
         toast({
-          title: "Description Empty",
-          description: "Description cannot be empty.",
+          title: "Incomplete Details",
+          description: "Accountable Officer, End-user, and Location cannot be empty.",
           variant: "destructive",
           duration: 4000
         });
@@ -193,25 +200,31 @@ export default function InventoryPage() {
       
       const categoryItems = inventory[categoryName] || [];
       const updatedItems = categoryItems.map(item => 
-        item.id === itemId ? { ...item, description: editedDescription, updatedAt: new Date().toISOString() } : item
+        item.id === itemId ? { 
+            ...item, 
+            accountableOfficer: editedAccountableOfficer,
+            endUser: editedEndUser,
+            location: editedLocation,
+            moreDetails: editedMoreDetails,
+            updatedAt: new Date().toISOString() 
+        } : item
       );
       inventory[categoryName] = updatedItems;
 
       localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(inventory));
       setItems(updatedItems);
       setEditingItemId(null);
-      setEditedDescription('');
       
       toast({
-        title: "Description Updated",
-        description: `The item description has been saved.`,
+        title: "Item Updated",
+        description: `The item details have been saved.`,
         duration: 2000,
       });
     } catch (error) {
-      console.error("Failed to update item description", error);
+      console.error("Failed to update item", error);
       toast({
         title: "Update Failed",
-        description: "There was an error updating the item description.",
+        description: "There was an error updating the item.",
         variant: "destructive",
         duration: 4000,
       });
@@ -302,14 +315,31 @@ export default function InventoryPage() {
                 </CardHeader>
                 <CardContent className="space-y-4 pt-0">
                   {editingItemId === item.id ? (
-                      <Textarea 
-                        value={editedDescription}
-                        onChange={(e) => setEditedDescription(e.target.value)}
-                        rows={4}
-                        className="text-sm sm:text-base"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="editAccountableOfficer" className="font-semibold">Accountable Officer</Label>
+                            <Input id="editAccountableOfficer" value={editedAccountableOfficer} onChange={(e) => setEditedAccountableOfficer(e.target.value)} className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="editEndUser" className="font-semibold">End-user</Label>
+                            <Input id="editEndUser" value={editedEndUser} onChange={(e) => setEditedEndUser(e.target.value)} className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="editLocation" className="font-semibold">Location</Label>
+                            <Input id="editLocation" value={editedLocation} onChange={(e) => setEditedLocation(e.target.value)} className="mt-1" />
+                        </div>
+                        <div>
+                            <Label htmlFor="editMoreDetails" className="font-semibold">More Details</Label>
+                            <Textarea id="editMoreDetails" value={editedMoreDetails} onChange={(e) => setEditedMoreDetails(e.target.value)} rows={4} className="mt-1" />
+                        </div>
+                      </div>
                   ) : (
-                    <p className="text-sm sm:text-base whitespace-pre-wrap">{item.description}</p>
+                    <div className="space-y-2 text-sm sm:text-base">
+                      <p><strong className="font-semibold">Accountable Officer:</strong> {item.accountableOfficer}</p>
+                      <p><strong className="font-semibold">End-user:</strong> {item.endUser}</p>
+                      <p><strong className="font-semibold">Location:</strong> {item.location}</p>
+                      {item.moreDetails && <p><strong className="font-semibold">More Details:</strong> <span className="whitespace-pre-wrap">{item.moreDetails}</span></p>}
+                    </div>
                   )}
                   {item.photos.length > 0 && (
                       <div className={cn("relative w-full max-w-sm mx-auto group", editingItemId !== item.id && "cursor-pointer")} onClick={() => openPreview(item.photos)}>

@@ -114,7 +114,8 @@ export default function CategoriesPage() {
             const itemFolder = categoryFolder.folder(itemFolderName);
 
             if (itemFolder) {
-              itemFolder.file("description.txt", item.description);
+              const descriptionText = `Accountable Officer: ${item.accountableOfficer}\nEnd-user: ${item.endUser}\nLocation: ${item.location}\nMore Details: ${item.moreDetails}`;
+              itemFolder.file("description.txt", descriptionText);
               for (const [photoIndex, photoDataUrl] of item.photos.entries()) {
                 const base64Data = photoDataUrl.split(',')[1];
                 itemFolder.file(`photo_${photoIndex + 1}.jpg`, base64Data, { base64: true });

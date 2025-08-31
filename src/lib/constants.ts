@@ -21,7 +21,10 @@ export const INVENTORY_STORAGE_KEY = 'Physical_Inventory';
 
 export interface InventoryItem {
   id: string;
-  description: string;
+  accountableOfficer: string;
+  endUser: string;
+  location: string;
+  moreDetails: string;
   photos: string[]; // base64 data URIs
   createdAt: string;
   updatedAt?: string;

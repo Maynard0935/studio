@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Input } from '@/components/ui/input';
 
 export default function AddItemPage() {
   const router = useRouter();
@@ -31,7 +32,10 @@ export default function AddItemPage() {
   const categoryName = decodeURIComponent(params.category as string) as CategoryName;
   const category = CATEGORIES.find(c => c.name === categoryName);
 
-  const [description, setDescription] = useState('');
+  const [accountableOfficer, setAccountableOfficer] = useState('');
+  const [endUser, setEndUser] = useState('');
+  const [location, setLocation] = useState('');
+  const [moreDetails, setMoreDetails] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -158,10 +162,10 @@ export default function AddItemPage() {
       });
       return;
     }
-    if (!description.trim()) {
+    if (!accountableOfficer.trim() || !endUser.trim() || !location.trim()) {
         toast({
-          title: "No Description",
-          description: "Please add a description.",
+          title: "Incomplete Details",
+          description: "Please fill out Accountable Officer, End-user, and Location.",
           variant: "destructive",
           duration: 4000,
         });
@@ -176,7 +180,10 @@ export default function AddItemPage() {
 
       const newItem: InventoryItem = {
         id: new Date().toISOString() + Math.random(),
-        description,
+        accountableOfficer,
+        endUser,
+        location,
+        moreDetails,
         photos: photos,
         createdAt: new Date().toISOString(),
         isUpdated: false,
@@ -239,17 +246,52 @@ export default function AddItemPage() {
       
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <Card>
-            <CardContent>
-                <Label htmlFor="description" className="font-semibold">Item Description</Label>
-                <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder={`Enter details for the item in ${category.name}...`}
-                    className="mt-2"
-                    rows={4}
-                    disabled={isSaving}
-                />
+            <CardContent className="space-y-4">
+                <div>
+                    <Label htmlFor="accountableOfficer" className="font-semibold">Accountable Officer</Label>
+                    <Input
+                        id="accountableOfficer"
+                        value={accountableOfficer}
+                        onChange={(e) => setAccountableOfficer(e.target.value)}
+                        placeholder="Enter name of accountable officer"
+                        className="mt-2"
+                        disabled={isSaving}
+                    />
+                </div>
+                <div>
+                    <Label htmlFor="endUser" className="font-semibold">End-user</Label>
+                    <Input
+                        id="endUser"
+                        value={endUser}
+                        onChange={(e) => setEndUser(e.target.value)}
+                        placeholder="Enter name of end-user"
+                        className="mt-2"
+                        disabled={isSaving}
+                    />
+                </div>
+                <div>
+                    <Label htmlFor="location" className="font-semibold">Location</Label>
+                    <Input
+                        id="location"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="Enter location of the item"
+                        className="mt-2"
+                        disabled={isSaving}
+                    />
+                </div>
+                <div>
+                    <Label htmlFor="moreDetails" className="font-semibold">More Details</Label>
+                    <Textarea
+                        id="moreDetails"
+                        value={moreDetails}
+                        onChange={(e) => setMoreDetails(e.target.value)}
+                        placeholder={`Enter any other details for the item in ${category.name}...`}
+                        className="mt-2"
+                        rows={4}
+                        disabled={isSaving}
+                    />
+                </div>
             </CardContent>
         </Card>
         
