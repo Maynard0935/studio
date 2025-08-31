@@ -43,22 +43,33 @@ export default function CategoriesPage() {
       <main className="w-full max-w-2xl flex-1 p-4 md:p-6">
         <div className="space-y-4">
           {CATEGORIES.map((category) => (
-            <Card key={category.name} className="shadow-sm hover:shadow-md transition-shadow">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <category.icon className="h-8 w-8 text-primary" />
-                  <div>
-                    <p className="font-semibold text-lg">{category.name}</p>
-                    <p className="text-sm text-muted-foreground">{inventoryCounts[category.name]} items</p>
+            <Link key={category.name} href={`/inventory/${encodeURIComponent(category.name)}`} passHref>
+              <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <category.icon className="h-8 w-8 text-primary" />
+                    <div>
+                      <p className="font-semibold text-lg">{category.name}</p>
+                      <p className="text-sm text-muted-foreground">{inventoryCounts[category.name]} items</p>
+                    </div>
                   </div>
-                </div>
-                <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref>
-                  <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                    <Plus className="mr-2 h-4 w-4" /> Add
+                  <Button
+                    asChild
+                    size="sm"
+                    className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      window.location.href = `/add-item/${encodeURIComponent(category.name)}`;
+                    }}
+                  >
+                    <Link href={`/add-item/${encodeURIComponent(category.name)}`}>
+                      <Plus className="mr-2 h-4 w-4" /> Add
+                    </Link>
                   </Button>
-                </Link>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </main>
