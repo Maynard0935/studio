@@ -2,7 +2,7 @@
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect, MouseEvent } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -22,13 +22,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -38,8 +31,6 @@ export default function InventoryPage() {
   const category = CATEGORIES.find(c => c.name === categoryName);
 
   const [items, setItems] = useState<InventoryItem[]>([]);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
 
   useEffect(() => {
     if (!category) {
@@ -96,27 +87,6 @@ export default function InventoryPage() {
         duration: 4000,
       });
     }
-  }
-  
-  const handleZoomClick = (e: MouseEvent<HTMLDivElement>) => {
-    if (isZoomed) {
-        setTransform({ x: 0, y: 0, scale: 1 });
-    } else {
-        const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - left;
-        const y = e.clientY - top;
-        setTransform({
-            x: -(x - width / 2) * 1.5,
-            y: -(y - height / 2) * 1.5,
-            scale: 2.5
-        });
-    }
-    setIsZoomed(!isZoomed);
-  };
-
-  const handleDialogClose = () => {
-    setIsZoomed(false);
-    setTransform({ x: 0, y: 0, scale: 1 });
   }
 
   const exportToCSV = () => {
@@ -207,92 +177,61 @@ export default function InventoryPage() {
         {items.length > 0 ? (
           <div className="space-y-6">
             {items.map((item) => (
-               <Dialog key={item.id} onOpenChange={(open) => !open && handleDialogClose()}>
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <CardDescription>{new Date(item.createdAt).toLocaleString()}</CardDescription>
-                         <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                             <Button variant="destructive" size="icon">
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete item</span>
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete this inventory item.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(item.id)}>Continue</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+              <Card key={item.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardDescription>{new Date(item.createdAt).toLocaleString()}</CardDescription>
+                      <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="icon">
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete item</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete this inventory item.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(item.id)}>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p>{item.description}</p>
+                    {item.photos.length > 0 && (
+                      <div className="relative w-full max-w-sm mx-auto group">
+                          <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
+                              <CarouselContent>
+                              {item.photos.map((photo, index) => (
+                                  <CarouselItem key={index}>
+                                      <div className="relative aspect-video">
+                                          <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md border-2 border-white" />
+                                      </div>
+                                  </CarouselItem>
+                              ))}
+                              </CarouselContent>
+                              {item.photos.length > 1 && (
+                                  <>
+                                      <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10" />
+                                      <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10" />
+                                  </>
+                              )}
+                          </Carousel>
+                          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-sm px-2.5 py-1.5 rounded-full flex items-center gap-1.5">
+                              <Images className="h-4 w-4" />
+                              <span>{item.photos.length}</span>
+                          </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <p>{item.description}</p>
-                       {item.photos.length > 0 && (
-                          <DialogTrigger asChild>
-                               <div className="relative w-full max-w-sm mx-auto cursor-pointer group">
-                                  <Carousel className="w-full">
-                                      <CarouselContent>
-                                      {item.photos.map((photo, index) => (
-                                          <CarouselItem key={index}>
-                                              <div className="relative aspect-video">
-                                                  <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md border-2 border-white" />
-                                              </div>
-                                          </CarouselItem>
-                                      ))}
-                                      </CarouselContent>
-                                  </Carousel>
-                                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-sm px-2.5 py-1.5 rounded-full flex items-center gap-1.5">
-                                      <Images className="h-4 w-4" />
-                                      <span>{item.photos.length}</span>
-                                  </div>
-                              </div>
-                          </DialogTrigger>
-                      )}
-                    </CardContent>
-                  </Card>
-                <DialogContent className="w-screen h-screen max-w-none p-0 border-0 bg-black/80 flex items-center justify-center">
-                   <DialogHeader className="absolute top-4 left-4 z-20 text-white bg-black/50 rounded-lg px-4 py-2">
-                      <DialogTitle>Image Preview</DialogTitle>
-                   </DialogHeader>
-                    <Carousel className="w-full h-full" opts={{ loop: item.photos.length > 1 }}>
-                        <CarouselContent className="h-full">
-                        {item.photos.map((photo, index) => (
-                            <CarouselItem key={index} className="h-full">
-                                <div
-                                    className="relative w-full h-full cursor-zoom-in"
-                                    onClick={handleZoomClick}
-                                >
-                                    <Image
-                                        src={photo}
-                                        alt={`Enlarged inventory item ${index + 1}`}
-                                        fill
-                                        className="object-contain transition-transform duration-300 ease-in-out"
-                                        style={{
-                                            transform: `scale(${transform.scale}) translateX(${transform.x}px) translateY(${transform.y}px)`
-                                        }}
-                                    />
-                                </div>
-                            </CarouselItem>
-                        ))}
-                        </CarouselContent>
-                        {!isZoomed && item.photos.length > 1 && (
-                        <>
-                            <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-20 h-12 w-12" />
-                            <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-20 h-12 w-12" />
-                        </>
-                        )}
-                    </Carousel>
-                </DialogContent>
-            </Dialog>
+                  )}
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : (
