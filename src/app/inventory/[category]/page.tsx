@@ -38,6 +38,8 @@ export default function InventoryPage() {
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [filter, setFilter] = useState('all');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
 
   useEffect(() => {
     if (!category) {
@@ -67,6 +69,11 @@ export default function InventoryPage() {
       });
     }
   }, [category, categoryName, router, toast]);
+  
+  const openPreview = (photos: string[]) => {
+    setPreviewPhotos(photos);
+    setIsPreviewOpen(true);
+  };
 
   const handleDelete = (itemId: string) => {
      try {
@@ -260,58 +267,23 @@ export default function InventoryPage() {
                 <CardContent className="space-y-4">
                   <p>{item.description}</p>
                     {item.photos.length > 0 && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                           <div className="relative w-full max-w-sm mx-auto group cursor-pointer">
-                               <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
-                                   <CarouselContent>
-                                   {item.photos.map((photo, index) => (
-                                       <CarouselItem key={index}>
-                                           <div className="relative aspect-video">
-                                               <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md border-2 border-white" />
-                                           </div>
-                                       </CarouselItem>
-                                   ))}
-                                   </CarouselContent>
-                               </Carousel>
-                               <div className="absolute bottom-2 right-2 bg-black/60 text-white text-base px-2.5 py-1.5 rounded-full flex items-center gap-1.5 pointer-events-none">
-                                   <Images className="h-4 w-4" />
-                                   <span>{item.photos.length}</span>
-                               </div>
-                           </div>
-                        </DialogTrigger>
-                        <DialogContent className="w-screen h-screen max-w-full max-h-full p-0 bg-black/80 flex items-center justify-center">
-                           <DialogHeader className="absolute top-4 left-4 z-20">
-                                <DialogTitle className="text-white">Image Preview</DialogTitle>
-                           </DialogHeader>
-                           <Carousel className="w-full h-full" opts={{ loop: item.photos.length > 1 }}>
-                               <CarouselContent className="h-full">
-                                   {item.photos.map((photo, index) => (
-                                       <CarouselItem key={index} className="h-full flex items-center justify-center">
-                                            <div className="relative w-full h-5/6">
-                                               <Image
-                                                   src={photo}
-                                                   alt={`Enlarged inventory item ${index + 1}`}
-                                                   fill
-                                                   className="object-contain"
-                                               />
-                                           </div>
-                                       </CarouselItem>
-                                   ))}
-                               </CarouselContent>
-                               {item.photos.length > 1 && (
-                                   <>
-                                       <CarouselPrevious className="absolute left-4 z-20 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
-                                           <ChevronLeft className="h-8 w-8" />
-                                       </CarouselPrevious>
-                                       <CarouselNext className="absolute right-4 z-20 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
-                                           <ChevronRight className="h-8 w-8" />
-                                       </CarouselNext>
-                                   </>
-                               )}
-                           </Carousel>
-                        </DialogContent>
-                      </Dialog>
+                      <div className="relative w-full max-w-sm mx-auto group cursor-pointer" onClick={() => openPreview(item.photos)}>
+                          <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
+                              <CarouselContent>
+                              {item.photos.map((photo, index) => (
+                                  <CarouselItem key={index}>
+                                      <div className="relative aspect-video">
+                                          <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                                      </div>
+                                  </CarouselItem>
+                              ))}
+                              </CarouselContent>
+                          </Carousel>
+                          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-base px-2.5 py-1.5 rounded-full flex items-center gap-1.5 pointer-events-none">
+                              <Images className="h-4 w-4" />
+                              <span>{item.photos.length}</span>
+                          </div>
+                      </div>
                   )}
                 </CardContent>
                 <div className="p-4 flex items-center space-x-2">
@@ -354,6 +326,41 @@ export default function InventoryPage() {
             </Button>
         </Link>
       </footer>
+
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+            <DialogContent className="w-screen h-screen max-w-full max-h-full p-0 bg-black/80 flex items-center justify-center">
+                <DialogHeader className="absolute top-4 left-4 z-20">
+                    <DialogTitle className="text-white">Image Preview</DialogTitle>
+                </DialogHeader>
+                <Carousel className="w-full h-full" opts={{ loop: previewPhotos.length > 1 }}>
+                    <CarouselContent className="h-full">
+                        {previewPhotos.map((photo, index) => (
+                            <CarouselItem key={index} className="h-full flex items-center justify-center">
+                                <div className="relative w-full h-5/6">
+                                <Image
+                                    src={photo}
+                                    alt={`Enlarged inventory item ${index + 1}`}
+                                    fill
+                                    className="object-contain"
+                                />
+                                </div>
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                    {previewPhotos.length > 1 && (
+                    <>
+                        <CarouselPrevious className="absolute left-4 z-20 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
+                            <ChevronLeft className="h-8 w-8" />
+                        </CarouselPrevious>
+                        <CarouselNext className="absolute right-4 z-20 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
+                            <ChevronRight className="h-8 w-8" />
+                        </CarouselNext>
+                    </>
+                    )}
+                </Carousel>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
+
