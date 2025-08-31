@@ -37,7 +37,8 @@ export default function InventoryPage() {
         toast({
             title: "Invalid Category",
             description: "The category does not exist.",
-            variant: "destructive"
+            variant: "destructive",
+            duration: 2000,
         });
         router.push('/categories');
         return;
@@ -55,6 +56,7 @@ export default function InventoryPage() {
         title: "Load Failed",
         description: "There was an error loading your inventory.",
         variant: "destructive",
+        duration: 2000,
       });
     }
   }, [category, categoryName, router, toast]);
@@ -75,6 +77,7 @@ export default function InventoryPage() {
       toast({
         title: "Item Deleted!",
         description: "The item has been removed from your inventory.",
+        duration: 2000,
       });
     } catch (error) {
       console.error("Failed to delete item from localStorage", error);
@@ -82,6 +85,7 @@ export default function InventoryPage() {
         title: "Delete Failed",
         description: "There was an error deleting your item.",
         variant: "destructive",
+        duration: 2000,
       });
     }
   }
@@ -91,7 +95,8 @@ export default function InventoryPage() {
       toast({
         title: "No Data",
         description: "There is no inventory data in this category to export.",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000
       });
       return;
     }
@@ -124,13 +129,15 @@ export default function InventoryPage() {
        toast({
         title: "Export Successful",
         description: `Your inventory for ${categoryName} has been downloaded as a CSV file.`,
+        duration: 2000,
       });
     } catch (error) {
       console.error("Failed to export data", error);
       toast({
         title: "Export Failed",
         description: "An error occurred while exporting your data.",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
     }
   };
