@@ -12,8 +12,6 @@ import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2 } from 'lucide-
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
-import { storage } from '@/lib/firebase';
-import { ref, uploadString, getDownloadURL } from "firebase/storage";
 
 export default function AddItemPage() {
   const router = useRouter();
@@ -149,23 +147,13 @@ export default function AddItemPage() {
     setIsSaving(true);
 
     try {
-      const photoURLs: string[] = [];
-
-      for (const photoDataUrl of photos) {
-        const fileName = `${categoryName.replace(/\s+/g, '-')}/${new Date().toISOString()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
-        const storageRef = ref(storage, fileName);
-        const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
-        const downloadURL = await getDownloadURL(uploadResult.ref);
-        photoURLs.push(downloadURL);
-      }
-
       const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
       const inventory: InventoryData = storedData ? JSON.parse(storedData) : {};
 
       const newItem: InventoryItem = {
         id: new Date().toISOString() + Math.random(),
         description,
-        photos: photoURLs,
+        photos: photos,
         createdAt: new Date().toISOString(),
       };
       
@@ -192,7 +180,7 @@ export default function AddItemPage() {
       } else {
         toast({
             title: "Save Failed",
-            description: "There was an error saving your item. Please check your network connection and try again.",
+            description: "There was an error saving your item. Please try again.",
             variant: "destructive",
         });
       }

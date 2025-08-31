@@ -22,7 +22,7 @@ export const INVENTORY_STORAGE_KEY = 'snapstock_inventory';
 export interface InventoryItem {
   id: string;
   description: string;
-  photos: string[]; // photo URLs
+  photos: string[]; // base64 data URIs
   createdAt: string;
 }
 
