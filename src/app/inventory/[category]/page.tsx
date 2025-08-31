@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, Plus, Camera, Trash2, Download, Images } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -232,29 +232,24 @@ export default function InventoryPage() {
                                 </div>
                             </div>
                         </DialogTrigger>
-                        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4">
-                            <DialogHeader>
-                                <DialogTitle>Image Preview</DialogTitle>
-                            </DialogHeader>
-                            <div className='flex-1 relative'>
-                                <Carousel className="w-full h-full" opts={{ loop: true }}>
-                                    <CarouselContent className="h-full">
-                                    {item.photos.map((photo, index) => (
-                                        <CarouselItem key={index} className="h-full">
-                                            <div className="relative w-full h-full">
-                                            <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
-                                            </div>
-                                        </CarouselItem>
-                                    ))}
-                                    </CarouselContent>
-                                    {item.photos.length > 1 && (
-                                    <>
-                                        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
-                                        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
-                                    </>
-                                    )}
-                                </Carousel>
-                            </div>
+                        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-0 border-0">
+                            <Carousel className="w-full h-full" opts={{ loop: true }}>
+                                <CarouselContent className="h-full">
+                                {item.photos.map((photo, index) => (
+                                    <CarouselItem key={index} className="h-full">
+                                        <div className="relative w-full h-full">
+                                        <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
+                                        </div>
+                                    </CarouselItem>
+                                ))}
+                                </CarouselContent>
+                                {item.photos.length > 1 && (
+                                <>
+                                    <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10" />
+                                    <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10" />
+                                </>
+                                )}
+                            </Carousel>
                         </DialogContent>
                     </Dialog>
                   )}
