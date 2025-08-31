@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Plus, Upload, Download } from 'lucide-react';
-import { CATEGORIES, type CategoryName, INVENTORY_STORAGE_KEY, type InventoryData } from '@/lib/constants';
+import { CATEGORIES, type CategoryName, INVENTORY_STORAGE_KEY, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
@@ -121,11 +121,44 @@ export default function CategoriesPage() {
   const confirmImport = () => {
     if (importData) {
       try {
-        localStorage.setItem(INVENTORY_STORAGE_KEY, importData);
+        const localDataString = localStorage.getItem(INVENTORY_STORAGE_KEY);
+        const localData: InventoryData = localDataString ? JSON.parse(localDataString) : {};
+        const importedData: InventoryData = JSON.parse(importData);
+
+        const mergedData: InventoryData = { ...localData };
+
+        for (const category in importedData) {
+            const catName = category as CategoryName;
+            if (!mergedData[catName]) {
+                mergedData[catName] = [];
+            }
+
+            const localItems = new Map((mergedData[catName] ?? []).map(item => [item.id, item]));
+            
+            importedData[catName]?.forEach((importedItem: InventoryItem) => {
+                const localItem = localItems.get(importedItem.id);
+                if (!localItem) {
+                    // Item is new, add it
+                    localItems.set(importedItem.id, importedItem);
+                } else {
+                    // Item exists, keep the newest one
+                    const localDate = new Date(localItem.createdAt);
+                    const importedDate = new Date(importedItem.createdAt);
+                    if (importedDate > localDate) {
+                        localItems.set(importedItem.id, importedItem);
+                    }
+                }
+            });
+            mergedData[catName] = Array.from(localItems.values());
+            // Sort by creation date descending
+            mergedData[catName]?.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+
+        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(mergedData));
         setImportData(null);
         toast({
           title: "Import Successful",
-          description: "Inventory data has been imported. The page will now reload.",
+          description: "Inventory data has been merged. The page will now reload.",
           duration: 4000,
         });
         // Reload to reflect the new data
@@ -134,7 +167,7 @@ export default function CategoriesPage() {
         console.error("Import failed", error);
         toast({
           title: "Import Failed",
-          description: "An error occurred while importing the data.",
+          description: "An error occurred while merging the data.",
           variant: "destructive",
           duration: 4000,
         });
@@ -205,14 +238,14 @@ export default function CategoriesPage() {
       <AlertDialog open={!!importData} onOpenChange={(open) => !open && setImportData(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Import</AlertDialogTitle>
+            <AlertDialogTitle>Confirm Data Merge</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to import this data? This will overwrite all current inventory data on this device. This action cannot be undone.
+              This will merge the data from the imported file with your current inventory. New items will be added and existing items will be updated. Are you sure you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setImportData(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmImport}>Import</AlertDialogAction>
+            <AlertDialogAction onClick={confirmImport}>Merge Data</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
