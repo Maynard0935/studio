@@ -6,8 +6,8 @@ import { useState, useEffect, MouseEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Plus, Camera, Trash2, Download, Images, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardDescription, CardFooter } from '@/components/ui/card';
+import { ArrowLeft, Plus, Camera, Trash2, Download, Images, X, ChevronLeft, ChevronRight, Edit, Save, FileArchive } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
@@ -25,8 +25,11 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 
 export default function InventoryPage() {
@@ -41,6 +44,8 @@ export default function InventoryPage() {
   const [selectedItemPhotos, setSelectedItemPhotos] = useState<string[] | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [transform, setTransform] = useState({ x: 0, y: 0 });
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editedDescription, setEditedDescription] = useState('');
 
   useEffect(() => {
     if (!category) {
@@ -72,6 +77,7 @@ export default function InventoryPage() {
   }, [category, categoryName, router, toast]);
   
   const openPreview = (photos: string[]) => {
+    if (editingItemId) return;
     setSelectedItemPhotos(photos);
     setIsZoomed(false);
     setTransform({ x: 0, y: 0 });
@@ -154,6 +160,57 @@ export default function InventoryPage() {
     }
   };
 
+  const handleEdit = (item: InventoryItem) => {
+    setEditingItemId(item.id);
+    setEditedDescription(item.description);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingItemId(null);
+    setEditedDescription('');
+  };
+
+  const handleSaveEdit = (itemId: string) => {
+    if (!editedDescription.trim()) {
+        toast({
+          title: "Description Empty",
+          description: "Description cannot be empty.",
+          variant: "destructive",
+          duration: 4000
+        });
+        return;
+    }
+    try {
+      const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
+      const inventory: InventoryData = storedData ? JSON.parse(storedData) : {};
+      
+      const categoryItems = inventory[categoryName] || [];
+      const updatedItems = categoryItems.map(item => 
+        item.id === itemId ? { ...item, description: editedDescription, updatedAt: new Date().toISOString() } : item
+      );
+      inventory[categoryName] = updatedItems;
+
+      localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(inventory));
+      setItems(updatedItems);
+      setEditingItemId(null);
+      setEditedDescription('');
+      
+      toast({
+        title: "Description Updated",
+        description: `The item description has been saved.`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error("Failed to update item description", error);
+      toast({
+        title: "Update Failed",
+        description: "There was an error updating the item description.",
+        variant: "destructive",
+        duration: 4000,
+      });
+    }
+  };
+
 
   const exportToCSV = () => {
     const itemsToExport = filteredItems;
@@ -168,13 +225,14 @@ export default function InventoryPage() {
     }
 
     try {
-      let csvContent = "Category,Description,Date Created,Photo Count,Status\n";
+      let csvContent = "Category,Description,Date Created,Date Updated,Photo Count,Status\n";
       
       itemsToExport.forEach(item => {
         const row = [
           `"${categoryName}"`,
           `"${item.description.replace(/"/g, '""')}"`,
           `"${new Date(item.createdAt).toLocaleString()}"`,
+          `"${item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'N/A'}"`,
           item.photos.length,
           `"${item.isUpdated ? 'Done Update' : 'Pending'}"`
         ].join(',');
@@ -208,6 +266,45 @@ export default function InventoryPage() {
       });
     }
   };
+  
+    const downloadAsZip = async () => {
+    const itemsToExport = filteredItems;
+    if (itemsToExport.length === 0) {
+      toast({ title: "No Data", description: "There are no items to export.", variant: "destructive", duration: 4000 });
+      return;
+    }
+
+    toast({ title: "Zipping...", description: "Your download will begin shortly." });
+
+    try {
+      const zip = new JSZip();
+      const categoryFolder = zip.folder(categoryName.replace(/[^a-zA-Z0-9]/g, '_'));
+
+      if (categoryFolder) {
+        for (const [itemIndex, item] of itemsToExport.entries()) {
+            const itemFolderName = `item_${item.id.substring(0, 8)}_${itemIndex + 1}`;
+            const itemFolder = categoryFolder.folder(itemFolderName);
+
+            if (itemFolder) {
+                itemFolder.file("description.txt", item.description);
+                for (const [photoIndex, photoDataUrl] of item.photos.entries()) {
+                    const base64Data = photoDataUrl.split(',')[1];
+                    itemFolder.file(`photo_${photoIndex + 1}.jpg`, base64Data, { base64: true });
+                }
+            }
+        }
+      }
+
+      const zipContent = await zip.generateAsync({ type: "blob" });
+      const date = new Date().toISOString().split('T')[0];
+      saveAs(zipContent, `inventory_${categoryName.replace(/[^a-zA-Z0-9]/g, '_')}_${date}.zip`);
+
+    } catch (error) {
+      console.error("Failed to create zip file", error);
+      toast({ title: "Zip Failed", description: "Could not create the zip file. Please try again.", variant: "destructive", duration: 4000 });
+    }
+  };
+
 
 
   if (!category) {
@@ -234,6 +331,10 @@ export default function InventoryPage() {
           <p className="text-muted-foreground text-sm sm:text-base">{items.length} items</p>
         </div>
         <div className='flex items-center gap-2'>
+            <Button variant="outline" size="icon" onClick={downloadAsZip}>
+                <FileArchive />
+                <span className="sr-only">Download as Zip</span>
+            </Button>
             <Button variant="outline" size="icon" onClick={exportToCSV}>
                 <Download />
                 <span className="sr-only">Export to CSV</span>
@@ -261,34 +362,54 @@ export default function InventoryPage() {
             {filteredItems.map((item) => (
               <Card key={item.id} className={cn(item.isUpdated && "border-green-500")}>
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <CardDescription className="text-xs sm:text-sm">{new Date(item.createdAt).toLocaleString()}</CardDescription>
-                      <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="icon">
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete item</span>
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete this inventory item.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDelete(item.id)}>Continue</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1">
+                      <CardDescription className="text-xs sm:text-sm">{new Date(item.createdAt).toLocaleString()}</CardDescription>
+                      {item.updatedAt && <CardDescription className="text-xs sm:text-sm mt-1">Updated: {new Date(item.updatedAt).toLocaleString()}</CardDescription>}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {editingItemId !== item.id && (
+                             <Button variant="outline" size="icon" onClick={() => handleEdit(item)}>
+                                <Edit className="h-4 w-4" />
+                                <span className="sr-only">Edit item</span>
+                            </Button>
+                        )}
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="icon">
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Delete item</span>
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete this inventory item.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(item.id)}>Continue</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm sm:text-base">{item.description}</p>
-                    {item.photos.length > 0 && (
-                      <div className="relative w-full max-w-sm mx-auto group cursor-pointer" onClick={() => openPreview(item.photos)}>
+                <CardContent className="space-y-4 pt-0">
+                  {editingItemId === item.id ? (
+                      <Textarea 
+                        value={editedDescription}
+                        onChange={(e) => setEditedDescription(e.target.value)}
+                        rows={4}
+                        className="text-sm sm:text-base"
+                      />
+                  ) : (
+                    <p className="text-sm sm:text-base whitespace-pre-wrap">{item.description}</p>
+                  )}
+                  {item.photos.length > 0 && (
+                      <div className={cn("relative w-full max-w-sm mx-auto group", editingItemId !== item.id && "cursor-pointer")} onClick={() => openPreview(item.photos)}>
                           <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
                               <CarouselContent>
                               {item.photos.map((photo, index) => (
@@ -307,18 +428,30 @@ export default function InventoryPage() {
                       </div>
                   )}
                 </CardContent>
-                <div className="p-4 flex items-center space-x-2">
-                    <Checkbox
-                        id={`done-update-${item.id}`}
-                        checked={!!item.isUpdated}
-                        onCheckedChange={(checked) => {
-                            handleStatusChange(item.id, !!checked);
-                        }}
-                    />
-                    <Label htmlFor={`done-update-${item.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Done Update
-                    </Label>
-                </div>
+                <CardFooter className="flex-col items-start gap-4">
+                     {editingItemId === item.id ? (
+                        <div className="flex justify-end w-full gap-2">
+                            <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
+                            <Button className="bg-primary hover:bg-primary/90" onClick={() => handleSaveEdit(item.id)}>
+                                <Save className="mr-2 h-4 w-4"/>
+                                Save
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id={`done-update-${item.id}`}
+                                checked={!!item.isUpdated}
+                                onCheckedChange={(checked) => {
+                                    handleStatusChange(item.id, !!checked);
+                                }}
+                            />
+                            <Label htmlFor={`done-update-${item.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                Done Update
+                            </Label>
+                        </div>
+                    )}
+                </CardFooter>
               </Card>
             ))}
           </div>
@@ -365,7 +498,6 @@ export default function InventoryPage() {
                                 <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
                                     <div 
                                         className="relative w-full h-full flex items-center justify-center"
-                                        onClick={handleZoomToggle}
                                         onMouseMove={handleMouseMove}
                                     >
                                         <Image
@@ -373,6 +505,7 @@ export default function InventoryPage() {
                                             alt={`Enlarged inventory item ${index + 1}`}
                                             width={2000}
                                             height={2000}
+                                            onClick={handleZoomToggle}
                                             className={cn(
                                                 "object-contain h-auto w-auto max-h-full max-w-full transition-transform duration-300 ease-in-out",
                                                 isZoomed ? "scale-[2.5] cursor-zoom-out" : "cursor-zoom-in"

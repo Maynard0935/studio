@@ -17,13 +17,14 @@ export const CATEGORIES = [
 
 export type CategoryName = typeof CATEGORIES[number]['name'];
 
-export const INVENTORY_STORAGE_KEY = 'snapstock_inventory';
+export const INVENTORY_STORAGE_KEY = 'Physical_Inventory';
 
 export interface InventoryItem {
   id: string;
   description: string;
   photos: string[]; // base64 data URIs
   createdAt: string;
+  updatedAt?: string;
   isUpdated?: boolean;
 }
 

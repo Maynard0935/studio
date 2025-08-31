@@ -239,7 +239,7 @@ export default function AddItemPage() {
       
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <Card>
-            <CardContent className="p-4">
+            <CardContent>
                 <Label htmlFor="description" className="font-semibold">Item Description</Label>
                 <Textarea
                     id="description"
@@ -254,7 +254,7 @@ export default function AddItemPage() {
         </Card>
         
         <Card>
-            <CardContent className="p-4">
+            <CardContent>
                 <div className="flex justify-between items-center mb-4">
                     <Label className="font-semibold">Photos ({photos.length})</Label>
                     <Button onClick={handleTakePhotoClick} className="bg-primary hover:bg-primary/90" disabled={isSaving}>

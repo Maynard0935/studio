@@ -105,7 +105,7 @@ export default function CategoriesPage() {
       const zip = new JSZip();
 
       for (const categoryName in inventory) {
-        const categoryFolder = zip.folder(categoryName);
+        const categoryFolder = zip.folder(categoryName.replace(/[^a-zA-Z0-9]/g, '_'));
         const items = inventory[categoryName as CategoryName] || [];
 
         if (categoryFolder && items.length > 0) {
@@ -190,11 +190,12 @@ export default function CategoriesPage() {
                     // Item is new, add it
                     localItems.set(importedItem.id, importedItem);
                 } else {
-                    // Item exists, keep the newest one
-                    const localDate = new Date(localItem.createdAt);
-                    const importedDate = new Date(importedItem.createdAt);
+                    // Item exists, keep the newest one based on creation or update time
+                    const localDate = new Date(localItem.updatedAt || localItem.createdAt);
+                    const importedDate = new Date(importedItem.updatedAt || importedItem.createdAt);
+
                     if (importedDate > localDate) {
-                        localItems.set(importedItem.id, importedItem);
+                        localItems.set(importedItem.id, { ...localItem, ...importedItem});
                     }
                 }
             });
@@ -294,7 +295,7 @@ export default function CategoriesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Data Merge</AlertDialogTitle>
             <AlertDialogDescription>
-              This will merge the data from the imported file with your current inventory. New items will be added and existing items will be updated. Are you sure you want to continue?
+              This will merge the data from the imported file with your current inventory. New items will be added and existing items will be updated if the imported version is newer. Are you sure you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
