@@ -37,8 +37,7 @@ export default function InventoryPage() {
   const category = CATEGORIES.find(c => c.name === categoryName);
 
   const [items, setItems] = useState<InventoryItem[]>([]);
-  const [mainCarouselApi, setMainCarouselApi] = useState<CarouselApi>()
-
+  
   useEffect(() => {
     if (!category) {
         toast({
@@ -238,7 +237,7 @@ export default function InventoryPage() {
                                 <DialogTitle>Image Preview</DialogTitle>
                             </DialogHeader>
                             <div className='flex-1 relative'>
-                                <Carousel className="w-full h-full" setApi={setMainCarouselApi} opts={{ loop: true }}>
+                                <Carousel className="w-full h-full" opts={{ loop: true }}>
                                     <CarouselContent className="h-full">
                                     {item.photos.map((photo, index) => (
                                         <CarouselItem key={index} className="h-full">
