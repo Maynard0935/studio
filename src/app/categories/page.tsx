@@ -56,7 +56,6 @@ export default function CategoriesPage() {
                     </div>
                   </div>
                   <Button
-                    size="sm"
                     className="bg-accent hover:bg-accent/90 text-accent-foreground"
                     onClick={(e) => {
                       e.stopPropagation();
