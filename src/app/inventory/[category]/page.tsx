@@ -37,12 +37,7 @@ export default function InventoryPage() {
   const category = CATEGORIES.find(c => c.name === categoryName);
 
   const [items, setItems] = useState<InventoryItem[]>([]);
-  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-
-  const [selectedItemPhotos, setSelectedItemPhotos] = useState<string[]>([]);
   const [mainCarouselApi, setMainCarouselApi] = useState<CarouselApi>()
-  const [thumbnailCarouselApi, setThumbnailCarouselApi] = useState<CarouselApi>()
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     if (!category) {
@@ -73,18 +68,6 @@ export default function InventoryPage() {
     }
   }, [category, categoryName, router, toast]);
 
-    useEffect(() => {
-    if (!mainCarouselApi || !thumbnailCarouselApi) {
-      return
-    }
-
-     mainCarouselApi.on("select", () => {
-        thumbnailCarouselApi.scrollTo(mainCarouselApi.selectedScrollSnap())
-    })
-
-  }, [thumbnailCarouselApi, mainCarouselApi])
-
-
   const handleDelete = (itemId: string) => {
      try {
       const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
@@ -96,7 +79,6 @@ export default function InventoryPage() {
 
       localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(inventory));
       setItems(updatedItems);
-      setItemToDelete(null);
 
       toast({
         title: "Item Deleted!",
@@ -233,11 +215,8 @@ export default function InventoryPage() {
                    {item.photos.length > 0 && (
                      <Dialog>
                         <DialogTrigger asChild>
-                             <div className="relative w-full max-w-sm mx-auto cursor-pointer group" onClick={() => { setSelectedItemPhotos(item.photos); if (mainCarouselApi) mainCarouselApi.scrollTo(0, true)}}>
-                                <Carousel
-                                    setApi={setThumbnailCarouselApi}
-                                    className="w-full"
-                                >
+                             <div className="relative w-full max-w-sm mx-auto cursor-pointer group">
+                                <Carousel className="w-full">
                                     <CarouselContent>
                                     {item.photos.map((photo, index) => (
                                         <CarouselItem key={index}>
@@ -254,6 +233,30 @@ export default function InventoryPage() {
                                 </div>
                             </div>
                         </DialogTrigger>
+                        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4">
+                            <DialogHeader>
+                                <DialogTitle>Image Preview</DialogTitle>
+                            </DialogHeader>
+                            <div className='flex-1 relative'>
+                                <Carousel className="w-full h-full" setApi={setMainCarouselApi} opts={{ loop: true }}>
+                                    <CarouselContent className="h-full">
+                                    {item.photos.map((photo, index) => (
+                                        <CarouselItem key={index} className="h-full">
+                                            <div className="relative w-full h-full">
+                                            <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
+                                            </div>
+                                        </CarouselItem>
+                                    ))}
+                                    </CarouselContent>
+                                    {item.photos.length > 1 && (
+                                    <>
+                                        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                                        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                                    </>
+                                    )}
+                                </Carousel>
+                            </div>
+                        </DialogContent>
                     </Dialog>
                   )}
                 </CardContent>
@@ -283,32 +286,6 @@ export default function InventoryPage() {
             </Button>
         </Link>
       </footer>
-        <Dialog open={selectedItemPhotos.length > 0} onOpenChange={(open) => !open && setSelectedItemPhotos([])}>
-            <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4">
-                <DialogHeader>
-                <DialogTitle>Image Preview</DialogTitle>
-                </DialogHeader>
-                <div className='flex-1 relative'>
-                    <Carousel className="w-full h-full" setApi={setMainCarouselApi} opts={{ startIndex: selectedImageIndex, loop: true }}>
-                        <CarouselContent className="h-full">
-                        {selectedItemPhotos.map((photo, index) => (
-                            <CarouselItem key={index} className="h-full">
-                                <div className="relative w-full h-full">
-                                <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
-                                </div>
-                            </CarouselItem>
-                        ))}
-                        </CarouselContent>
-                        {selectedItemPhotos.length > 1 && (
-                        <>
-                            <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
-                            <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
-                        </>
-                        )}
-                    </Carousel>
-                </div>
-            </DialogContent>
-        </Dialog>
     </div>
   );
 }
