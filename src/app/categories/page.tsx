@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Plus, Upload, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Upload, Download, FileArchive } from 'lucide-react';
 import { CATEGORIES, type CategoryName, INVENTORY_STORAGE_KEY, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
@@ -19,6 +19,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 export default function CategoriesPage() {
     const router = useRouter();
@@ -85,6 +87,50 @@ export default function CategoriesPage() {
       });
     }
   };
+  
+  const downloadAllAsZip = async () => {
+    const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
+    if (!storedData || storedData === '{}') {
+      toast({ title: "No Data", description: "There is no inventory to export.", variant: "destructive", duration: 4000 });
+      return;
+    }
+
+    toast({ title: "Zipping...", description: "Your download will begin shortly." });
+
+    try {
+      const inventory: InventoryData = JSON.parse(storedData);
+      const zip = new JSZip();
+
+      for (const categoryName in inventory) {
+        const categoryFolder = zip.folder(categoryName);
+        const items = inventory[categoryName as CategoryName] || [];
+
+        if (categoryFolder && items.length > 0) {
+          for (const [itemIndex, item] of items.entries()) {
+            const itemFolderName = `item_${itemIndex + 1}`;
+            const itemFolder = categoryFolder.folder(itemFolderName);
+
+            if (itemFolder) {
+              itemFolder.file("description.txt", item.description);
+              for (const [photoIndex, photoDataUrl] of item.photos.entries()) {
+                const base64Data = photoDataUrl.split(',')[1];
+                itemFolder.file(`photo_${photoIndex + 1}.jpg`, base64Data, { base64: true });
+              }
+            }
+          }
+        }
+      }
+
+      const zipContent = await zip.generateAsync({ type: "blob" });
+      const date = new Date().toISOString().split('T')[0];
+      saveAs(zipContent, `inventory_backup_${date}.zip`);
+
+    } catch (error) {
+      console.error("Failed to create zip file", error);
+      toast({ title: "Zip Failed", description: "Could not create the zip file. Please try again.", variant: "destructive", duration: 4000 });
+    }
+  };
+
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
@@ -195,6 +241,10 @@ export default function CategoriesPage() {
                 <Upload className="mr-2 h-4 w-4" />
                 Export
             </Button>
+             <Button variant="outline" size="sm" onClick={downloadAllAsZip} className="bg-primary/10 hover:bg-primary/20">
+                <FileArchive className="mr-2 h-4 w-4" />
+                Zip
+            </Button>
         </div>
       </header>
 
@@ -230,8 +280,8 @@ export default function CategoriesPage() {
         </div>
       </main>
 
-      <footer className="w-full border-t border-border/40 mt-auto">
-        <div className="container mx-auto flex items-center justify-center py-4">
+      <footer className="w-full border-t border-border/40 mt-auto bg-background/95 backdrop-blur-sm py-4">
+        <div className="container mx-auto flex items-center justify-center">
             <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Physical Inventory App. All rights reserved.</p>
         </div>
       </footer>
