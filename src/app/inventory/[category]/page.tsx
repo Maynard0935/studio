@@ -47,6 +47,15 @@ export default function InventoryPage() {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editedDescription, setEditedDescription] = useState('');
 
+  const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  };
+
   useEffect(() => {
     if (!category) {
         toast({
@@ -231,8 +240,8 @@ export default function InventoryPage() {
         const row = [
           `"${categoryName}"`,
           `"${item.description.replace(/"/g, '""')}"`,
-          `"${new Date(item.createdAt).toLocaleString()}"`,
-          `"${item.updatedAt ? new Date(item.updatedAt).toLocaleString() : 'N/A'}"`,
+          `"${new Date(item.createdAt).toLocaleString(undefined, dateTimeFormatOptions)}"`,
+          `"${item.updatedAt ? new Date(item.updatedAt).toLocaleString(undefined, dateTimeFormatOptions) : 'N/A'}"`,
           item.photos.length,
           `"${item.isUpdated ? 'Done Update' : 'Pending'}"`
         ].join(',');
@@ -364,8 +373,8 @@ export default function InventoryPage() {
                 <CardHeader>
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex-1">
-                      <CardDescription className="text-xs sm:text-sm">{new Date(item.createdAt).toLocaleString()}</CardDescription>
-                      {item.updatedAt && <CardDescription className="text-xs sm:text-sm mt-1">Updated: {new Date(item.updatedAt).toLocaleString()}</CardDescription>}
+                      <CardDescription className="text-xs sm:text-sm">{new Date(item.createdAt).toLocaleString(undefined, dateTimeFormatOptions)}</CardDescription>
+                      {item.updatedAt && <CardDescription className="text-xs sm:text-sm mt-1">Updated: {new Date(item.updatedAt).toLocaleString(undefined, dateTimeFormatOptions)}</CardDescription>}
                     </div>
                     <div className="flex items-center gap-2">
                         {editingItemId !== item.id && (
