@@ -7,8 +7,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Plus, Camera, Trash2, Download, Images } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { ArrowLeft, Plus, Camera, Trash2, Download, Images, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -25,7 +25,9 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -258,23 +260,61 @@ export default function InventoryPage() {
                 <CardContent className="space-y-4">
                   <p>{item.description}</p>
                     {item.photos.length > 0 && (
-                     <div className="relative w-full max-w-sm mx-auto group">
-                         <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
-                             <CarouselContent>
-                             {item.photos.map((photo, index) => (
-                                 <CarouselItem key={index}>
-                                     <div className="relative aspect-video">
-                                         <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md border-2 border-white" />
-                                     </div>
-                                 </CarouselItem>
-                             ))}
-                             </CarouselContent>
-                         </Carousel>
-                         <div className="absolute bottom-2 right-2 bg-black/60 text-white text-base px-2.5 py-1.5 rounded-full flex items-center gap-1.5">
-                             <Images className="h-4 w-4" />
-                             <span>{item.photos.length}</span>
-                         </div>
-                     </div>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                           <div className="relative w-full max-w-sm mx-auto group cursor-pointer">
+                               <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
+                                   <CarouselContent>
+                                   {item.photos.map((photo, index) => (
+                                       <CarouselItem key={index}>
+                                           <div className="relative aspect-video">
+                                               <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md border-2 border-white" />
+                                           </div>
+                                       </CarouselItem>
+                                   ))}
+                                   </CarouselContent>
+                               </Carousel>
+                               <div className="absolute bottom-2 right-2 bg-black/60 text-white text-base px-2.5 py-1.5 rounded-full flex items-center gap-1.5 pointer-events-none">
+                                   <Images className="h-4 w-4" />
+                                   <span>{item.photos.length}</span>
+                               </div>
+                           </div>
+                        </DialogTrigger>
+                        <DialogContent className="w-screen h-screen max-w-full max-h-full p-0 bg-black/80 flex items-center justify-center">
+                           <DialogHeader className="absolute top-4 left-4 z-20">
+                                <DialogTitle className="text-white">Image Preview</DialogTitle>
+                           </DialogHeader>
+                           <DialogClose className="absolute top-4 right-4 z-20 text-white rounded-full bg-black/50 p-2">
+                               <X className="h-8 w-8" />
+                           </DialogClose>
+                           <Carousel className="w-full h-full" opts={{ loop: item.photos.length > 1 }}>
+                               <CarouselContent className="h-full">
+                                   {item.photos.map((photo, index) => (
+                                       <CarouselItem key={index} className="h-full flex items-center justify-center">
+                                            <div className="relative w-full h-5/6">
+                                               <Image
+                                                   src={photo}
+                                                   alt={`Enlarged inventory item ${index + 1}`}
+                                                   fill
+                                                   className="object-contain"
+                                               />
+                                           </div>
+                                       </CarouselItem>
+                                   ))}
+                               </CarouselContent>
+                               {item.photos.length > 1 && (
+                                   <>
+                                       <CarouselPrevious className="absolute left-4 z-20 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
+                                           <ChevronLeft className="h-8 w-8" />
+                                       </CarouselPrevious>
+                                       <CarouselNext className="absolute right-4 z-20 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
+                                           <ChevronRight className="h-8 w-8" />
+                                       </CarouselNext>
+                                   </>
+                               )}
+                           </Carousel>
+                        </DialogContent>
+                      </Dialog>
                   )}
                 </CardContent>
                 <div className="p-4 flex items-center space-x-2">
@@ -320,5 +360,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-
-    
