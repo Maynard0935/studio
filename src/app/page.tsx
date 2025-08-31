@@ -5,7 +5,7 @@ import { Logo } from '@/components/Logo';
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col items-center">
-      <main className="flex flex-1 flex-col items-center justify-center p-4 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center p-4 text-center animate-in fade-in zoom-in-95 duration-500">
         <Logo />
         <h1 className="text-4xl font-bold mt-6 mb-4">Physical Inventory App</h1>
         <p className="text-lg text-muted-foreground mb-8 max-w-md">
