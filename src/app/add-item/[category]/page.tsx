@@ -55,12 +55,61 @@ export default function AddItemPage() {
     }
   };
 
-  const confirmPhoto = () => {
+  const compressImage = (dataUrl: string, maxSize = 1024): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let { width, height } = img;
+
+            if (width > height) {
+                if (width > maxSize) {
+                    height *= maxSize / width;
+                    width = maxSize;
+                }
+            } else {
+                if (height > maxSize) {
+                    width *= maxSize / height;
+                    height = maxSize;
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                return reject(new Error('Failed to get canvas context'));
+            }
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.onerror = (error) => {
+            console.error("Image load error", error);
+            reject(new Error('Failed to load image for compression.'));
+        };
+        img.src = dataUrl;
+    });
+};
+
+
+  const confirmPhoto = async () => {
     if (previewImage) {
-      setPhotos((prev) => [...prev, previewImage]);
-      setPreviewImage(null);
+        try {
+            const compressedImage = await compressImage(previewImage);
+            setPhotos((prev) => [...prev, compressedImage]);
+            setPreviewImage(null);
+        } catch (error) {
+            console.error("Failed to compress image", error);
+            toast({
+                title: "Processing Failed",
+                description: "Could not process the image. Please try again.",
+                variant: "destructive",
+            });
+            // Still add the original image if compression fails
+            setPhotos((prev) => [...prev, previewImage]);
+            setPreviewImage(null);
+        }
     }
-  };
+};
 
   const retakePhoto = () => {
     setPreviewImage(null);
@@ -118,11 +167,19 @@ export default function AddItemPage() {
       router.push('/categories');
     } catch (error) {
       console.error("Failed to save item to localStorage", error);
-      toast({
-        title: "Save Failed",
-        description: "There was an error saving your item.",
-        variant: "destructive",
-      });
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+         toast({
+            title: "Storage Full",
+            description: "Cannot save item. Your device storage for this app is full.",
+            variant: "destructive",
+        });
+      } else {
+        toast({
+            title: "Save Failed",
+            description: "There was an error saving your item.",
+            variant: "destructive",
+        });
+      }
     }
   };
 
