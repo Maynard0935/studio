@@ -2,7 +2,7 @@
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, MouseEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,9 @@ export default function InventoryPage() {
   const category = CATEGORIES.find(c => c.name === categoryName);
 
   const [items, setItems] = useState<InventoryItem[]>([]);
-  
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+
   useEffect(() => {
     if (!category) {
         toast({
@@ -96,6 +98,27 @@ export default function InventoryPage() {
     }
   }
   
+  const handleZoomClick = (e: MouseEvent<HTMLDivElement>) => {
+    setIsZoomed(!isZoomed);
+    if (!isZoomed) {
+        const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - left;
+        const y = e.clientY - top;
+        setTransform({
+            x: -(x - width / 2) * 1.5,
+            y: -(y - height / 2) * 1.5,
+            scale: 2.5
+        });
+    } else {
+        setTransform({ x: 0, y: 0, scale: 1 });
+    }
+  };
+
+  const handleDialogClose = () => {
+    setIsZoomed(false);
+    setTransform({ x: 0, y: 0, scale: 1 });
+  }
+
   const exportToCSV = () => {
     if (items.length === 0) {
       toast({
@@ -213,7 +236,7 @@ export default function InventoryPage() {
                 <CardContent className="space-y-4">
                   <p>{item.description}</p>
                    {item.photos.length > 0 && (
-                     <Dialog>
+                     <Dialog onOpenChange={(open) => !open && handleDialogClose()}>
                         <DialogTrigger asChild>
                              <div className="relative w-full max-w-sm mx-auto cursor-pointer group">
                                 <Carousel className="w-full">
@@ -233,7 +256,7 @@ export default function InventoryPage() {
                                 </div>
                             </div>
                         </DialogTrigger>
-                        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-0 border-0">
+                        <DialogContent className="w-screen h-screen max-w-none p-0 border-0 bg-black/80 flex items-center justify-center">
                            <DialogHeader className="sr-only">
                               <DialogTitle>Enlarged photo preview</DialogTitle>
                            </DialogHeader>
@@ -241,13 +264,24 @@ export default function InventoryPage() {
                                 <CarouselContent className="h-full">
                                 {item.photos.map((photo, index) => (
                                     <CarouselItem key={index} className="h-full">
-                                        <div className="relative w-full h-full">
-                                        <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
+                                        <div
+                                            className="relative w-full h-full cursor-zoom-in"
+                                            onClick={handleZoomClick}
+                                        >
+                                            <Image
+                                                src={photo}
+                                                alt={`Enlarged inventory item ${index + 1}`}
+                                                fill
+                                                className="object-contain transition-transform duration-300 ease-in-out"
+                                                style={{
+                                                    transform: `scale(${transform.scale}) translateX(${transform.x}px) translateY(${transform.y}px)`
+                                                }}
+                                            />
                                         </div>
                                     </CarouselItem>
                                 ))}
                                 </CarouselContent>
-                                {item.photos.length > 1 && (
+                                {!isZoomed && item.photos.length > 1 && (
                                 <>
                                     <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10" />
                                     <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10" />
@@ -287,5 +321,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-
-    
