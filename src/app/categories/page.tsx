@@ -187,14 +187,14 @@ export default function CategoriesPage() {
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={handleImportClick}>
-                <Download />
-                <span className="sr-only">Import Data</span>
+            <Button variant="outline" size="sm" onClick={handleImportClick} className="bg-primary/10 hover:bg-primary/20">
+                <Download className="mr-2 h-4 w-4" />
+                Import
             </Button>
             <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
-            <Button variant="outline" size="icon" onClick={handleExport}>
-                <Upload />
-                <span className="sr-only">Export Data</span>
+            <Button variant="outline" size="sm" onClick={handleExport} className="bg-primary/10 hover:bg-primary/20">
+                <Upload className="mr-2 h-4 w-4" />
+                Export
             </Button>
         </div>
       </header>
@@ -251,6 +251,8 @@ export default function CategoriesPage() {
       </AlertDialog>
     </div>
   );
+
+    
 
     
 
