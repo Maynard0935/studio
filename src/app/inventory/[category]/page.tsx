@@ -38,8 +38,7 @@ export default function InventoryPage() {
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [filter, setFilter] = useState('all');
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
+  const [selectedItemPhotos, setSelectedItemPhotos] = useState<string[] | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [transform, setTransform] = useState({ x: 0, y: 0 });
 
@@ -73,15 +72,13 @@ export default function InventoryPage() {
   }, [category, categoryName, router, toast]);
   
   const openPreview = (photos: string[]) => {
-    setPreviewPhotos(photos);
-    setIsPreviewOpen(true);
+    setSelectedItemPhotos(photos);
     setIsZoomed(false);
     setTransform({ x: 0, y: 0 });
   };
   
   const closePreview = () => {
-    setIsPreviewOpen(false);
-    setPreviewPhotos([]);
+    setSelectedItemPhotos(null);
   }
   
   const handleZoomToggle = () => {
@@ -232,11 +229,11 @@ export default function InventoryPage() {
             <span className="sr-only">Back</span>
           </Button>
         </Link>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold">{category.name}</h1>
-          <p className="text-muted-foreground">{items.length} items</p>
+        <div className="text-center flex-1 mx-4 overflow-hidden">
+          <h1 className="text-xl sm:text-2xl font-bold truncate">{category.name}</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">{items.length} items</p>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2 flex-col sm:flex-row'>
             <Button variant="outline" size="icon" onClick={exportToCSV}>
                 <Download />
                 <span className="sr-only">Export to CSV</span>
@@ -252,7 +249,7 @@ export default function InventoryPage() {
 
       <main className="flex-1 p-4 md:p-6">
         <Tabs value={filter} onValueChange={setFilter} className="w-full mb-4">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-3 text-xs sm:text-sm">
                 <TabsTrigger value="all">All ({items.length})</TabsTrigger>
                 <TabsTrigger value="done">Done ({items.filter(i => i.isUpdated).length})</TabsTrigger>
                 <TabsTrigger value="pending">Pending ({items.filter(i => !i.isUpdated).length})</TabsTrigger>
@@ -265,7 +262,7 @@ export default function InventoryPage() {
               <Card key={item.id} className={cn(item.isUpdated && "border-green-500")}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <CardDescription>{new Date(item.createdAt).toLocaleString()}</CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">{new Date(item.createdAt).toLocaleString()}</CardDescription>
                       <AlertDialog>
                       <AlertDialogTrigger asChild>
                           <Button variant="destructive" size="icon">
@@ -289,7 +286,7 @@ export default function InventoryPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p>{item.description}</p>
+                  <p className="text-sm sm:text-base">{item.description}</p>
                     {item.photos.length > 0 && (
                       <div className="relative w-full max-w-sm mx-auto group cursor-pointer" onClick={() => openPreview(item.photos)}>
                           <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
@@ -303,8 +300,8 @@ export default function InventoryPage() {
                               ))}
                               </CarouselContent>
                           </Carousel>
-                          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-base px-2.5 py-1.5 rounded-full flex items-center gap-1.5 pointer-events-none">
-                              <Images className="h-4 w-4" />
+                          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs sm:text-base px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full flex items-center gap-1 sm:gap-1.5 pointer-events-none">
+                              <Images className="h-3 w-3 sm:h-4 sm:w-4" />
                               <span>{item.photos.length}</span>
                           </div>
                       </div>
@@ -351,53 +348,56 @@ export default function InventoryPage() {
         </Link>
       </footer>
 
-        <Dialog open={isPreviewOpen} onOpenChange={closePreview}>
+        <Dialog open={!!selectedItemPhotos} onOpenChange={closePreview}>
             <DialogContent className="w-screen h-screen max-w-full max-h-full p-0 bg-black/90 flex items-center justify-center border-0">
-                 <DialogHeader className="absolute top-4 left-4 z-50">
+                <DialogHeader className="absolute top-4 left-4 z-50">
                     <DialogTitle className="text-white">Image Preview</DialogTitle>
                 </DialogHeader>
                 <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-50">
                     <X className="h-8 w-8 text-white" />
                     <span className="sr-only">Close</span>
                 </DialogClose>
-                <Carousel className="w-full h-full" opts={{ loop: previewPhotos.length > 1, onDrag: () => isZoomed }} onPointerDown={() => isZoomed && false} >
-                    <CarouselContent className="h-full">
-                        {previewPhotos.map((photo, index) => (
-                            <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
-                                <div 
-                                    className="relative w-full h-full flex items-center justify-center"
-                                    onClick={handleZoomToggle}
-                                    onMouseMove={handleMouseMove}
-                                >
-                                    <Image
-                                        src={photo}
-                                        alt={`Enlarged inventory item ${index + 1}`}
-                                        width={2000}
-                                        height={2000}
-                                        className={cn(
-                                            "object-contain h-auto w-auto max-h-full max-w-full transition-transform duration-300 ease-in-out",
-                                            isZoomed ? "scale-[2.5] cursor-zoom-out" : "cursor-zoom-in"
-                                        )}
-                                        style={{
-                                            transform: isZoomed ? `scale(2.5) translate(${transform.x}%, ${transform.y}%)` : 'scale(1)',
-                                            transformOrigin: 'center center'
-                                        }}
-                                    />
-                                </div>
-                            </CarouselItem>
-                        ))}
-                    </CarouselContent>
-                    {previewPhotos.length > 1 && !isZoomed && (
-                    <>
-                        <CarouselPrevious className="absolute left-4 z-50 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
-                            <ChevronLeft className="h-8 w-8" />
-                        </CarouselPrevious>
-                        <CarouselNext className="absolute right-4 z-50 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
-                            <ChevronRight className="h-8 w-8" />
-                        </CarouselNext>
-                    </>
-                    )}
-                </Carousel>
+
+                {selectedItemPhotos && (
+                    <Carousel className="w-full h-full" opts={{ loop: selectedItemPhotos.length > 1, draggable: !isZoomed }}>
+                        <CarouselContent className="h-full">
+                            {selectedItemPhotos.map((photo, index) => (
+                                <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
+                                    <div 
+                                        className="relative w-full h-full flex items-center justify-center"
+                                        onClick={handleZoomToggle}
+                                        onMouseMove={handleMouseMove}
+                                    >
+                                        <Image
+                                            src={photo}
+                                            alt={`Enlarged inventory item ${index + 1}`}
+                                            width={2000}
+                                            height={2000}
+                                            className={cn(
+                                                "object-contain h-auto w-auto max-h-full max-w-full transition-transform duration-300 ease-in-out",
+                                                isZoomed ? "scale-[2.5] cursor-zoom-out" : "cursor-zoom-in"
+                                            )}
+                                            style={{
+                                                transform: isZoomed ? `scale(2.5) translate(${transform.x}%, ${transform.y}%)` : 'scale(1)',
+                                                transformOrigin: 'center center'
+                                            }}
+                                        />
+                                    </div>
+                                </CarouselItem>
+                            ))}
+                        </CarouselContent>
+                        {selectedItemPhotos.length > 1 && !isZoomed && (
+                        <>
+                            <CarouselPrevious className="absolute left-4 z-50 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
+                                <ChevronLeft className="h-8 w-8" />
+                            </CarouselPrevious>
+                            <CarouselNext className="absolute right-4 z-50 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
+                                <ChevronRight className="h-8 w-8" />
+                            </CarouselNext>
+                        </>
+                        )}
+                    </Carousel>
+                )}
             </DialogContent>
         </Dialog>
     </div>

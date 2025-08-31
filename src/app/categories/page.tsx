@@ -40,7 +40,7 @@ export default function CategoriesPage() {
             <span className="sr-only">Back</span>
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">Categories</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
          <div className="w-10"></div>
       </header>
 
@@ -49,24 +49,25 @@ export default function CategoriesPage() {
           {CATEGORIES.map((category) => (
             <Link key={category.name} href={`/inventory/${encodeURIComponent(category.name)}`} passHref>
               <Card className="shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <category.icon className="h-8 w-8 text-primary" />
-                    <div>
-                      <p className="font-semibold text-lg">{category.name}</p>
+                <CardContent className="p-4 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <category.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                    <div className='flex-1'>
+                      <p className="font-semibold text-base sm:text-lg">{category.name}</p>
                       <p className="text-sm text-muted-foreground">{inventoryCounts[category.name]} items</p>
                     </div>
                   </div>
                   <Button
-                    size="lg"
-                    className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                    size="sm"
+                    className="bg-accent hover:bg-accent/90 text-accent-foreground whitespace-nowrap sm:size-lg"
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
                       router.push(`/add-item/${encodeURIComponent(category.name)}`);
                     }}
                   >
-                    <Plus className="mr-2 h-4 w-4" /> Add
+                    <Plus className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Add</span>
                   </Button>
                 </CardContent>
               </Card>

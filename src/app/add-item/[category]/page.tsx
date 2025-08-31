@@ -211,8 +211,8 @@ export default function AddItemPage() {
           </Button>
         </Link>
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Add Item</h1>
-          <p className="text-muted-foreground">{category.name}</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Add Item</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">{category.name}</p>
         </div>
         <div className="w-10"></div>
       </header>
@@ -253,7 +253,7 @@ export default function AddItemPage() {
                 </div>
                 
                 {photos.length > 0 ? (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
                         {photos.map((photo, index) => (
                         <div key={index} className="relative group aspect-square">
                             <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
