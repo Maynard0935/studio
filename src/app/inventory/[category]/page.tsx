@@ -99,8 +99,9 @@ export default function InventoryPage() {
   }
   
   const handleZoomClick = (e: MouseEvent<HTMLDivElement>) => {
-    setIsZoomed(!isZoomed);
-    if (!isZoomed) {
+    if (isZoomed) {
+        setTransform({ x: 0, y: 0, scale: 1 });
+    } else {
         const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - left;
         const y = e.clientY - top;
@@ -109,9 +110,8 @@ export default function InventoryPage() {
             y: -(y - height / 2) * 1.5,
             scale: 2.5
         });
-    } else {
-        setTransform({ x: 0, y: 0, scale: 1 });
     }
+    setIsZoomed(!isZoomed);
   };
 
   const handleDialogClose = () => {
@@ -257,8 +257,8 @@ export default function InventoryPage() {
                             </div>
                         </DialogTrigger>
                         <DialogContent className="w-screen h-screen max-w-none p-0 border-0 bg-black/80 flex items-center justify-center">
-                           <DialogHeader className="sr-only">
-                              <DialogTitle>Enlarged photo preview</DialogTitle>
+                           <DialogHeader className="absolute top-4 left-4 z-20 text-white bg-black/50 rounded-lg px-4 py-2">
+                              <DialogTitle>Image Preview</DialogTitle>
                            </DialogHeader>
                             <Carousel className="w-full h-full" opts={{ loop: item.photos.length > 1 }}>
                                 <CarouselContent className="h-full">
@@ -283,8 +283,8 @@ export default function InventoryPage() {
                                 </CarouselContent>
                                 {!isZoomed && item.photos.length > 1 && (
                                 <>
-                                    <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2 z-10" />
-                                    <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2 z-10" />
+                                    <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-20 h-12 w-12" />
+                                    <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-20 h-12 w-12" />
                                 </>
                                 )}
                             </Carousel>
