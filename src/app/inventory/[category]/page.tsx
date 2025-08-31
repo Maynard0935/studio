@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
 import { ArrowLeft, Plus, Camera, Trash2, Download } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -39,6 +39,10 @@ export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
+  const [thumbnailCarouselApi, setThumbnailCarouselApi] = useState<CarouselApi>()
+  const [mainCarouselApi, setMainCarouselApi] = useState<CarouselApi>()
+  const [current, setCurrent] = useState(0)
+
   useEffect(() => {
     if (!category) {
         toast({
@@ -67,6 +71,22 @@ export default function InventoryPage() {
       });
     }
   }, [category, categoryName, router, toast]);
+
+    useEffect(() => {
+    if (!thumbnailCarouselApi || !mainCarouselApi) {
+      return
+    }
+
+    thumbnailCarouselApi.on("select", () => {
+        mainCarouselApi.scrollTo(thumbnailCarouselApi.selectedScrollSnap())
+    })
+
+    mainCarouselApi.on("select", () => {
+        thumbnailCarouselApi.scrollTo(mainCarouselApi.selectedScrollSnap())
+    })
+
+  }, [thumbnailCarouselApi, mainCarouselApi])
+
 
   const handleDelete = (itemId: string) => {
      try {
@@ -214,50 +234,53 @@ export default function InventoryPage() {
                 <CardContent className="space-y-4">
                   <p>{item.description}</p>
                    {item.photos.length > 0 && (
-                    <Dialog>
-                      <Carousel className="w-full max-w-sm mx-auto">
-                        <CarouselContent>
-                          {item.photos.map((photo, index) => (
-                            <CarouselItem key={index}>
-                                <DialogTrigger asChild>
-                                  <div className="relative aspect-video cursor-pointer">
-                                    <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
-                                  </div>
-                                </DialogTrigger>
-                            </CarouselItem>
-                          ))}
-                        </CarouselContent>
-                        {item.photos.length > 1 && (
-                          <>
-                            <CarouselPrevious className="left-2" />
-                            <CarouselNext className="right-2" />
-                          </>
-                        )}
-                      </Carousel>
-                      <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4 bg-white dark:bg-neutral-900">
-                        <DialogHeader>
-                          <DialogTitle>Image Preview</DialogTitle>
-                        </DialogHeader>
-                        <div className='flex-1 relative'>
-                          <Carousel className="w-full h-full">
-                            <CarouselContent className="h-full">
-                              {item.photos.map((photo, index) => (
-                                <CarouselItem key={index} className="h-full">
-                                    <div className="relative w-full h-full">
-                                      <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
-                                    </div>
-                                </CarouselItem>
-                              ))}
-                            </CarouselContent>
-                             {item.photos.length > 1 && (
-                              <>
-                                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
-                                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
-                              </>
-                            )}
-                          </Carousel>
-                        </div>
-                      </DialogContent>
+                     <Dialog>
+                        <DialogTrigger asChild>
+                            <Carousel
+                                setApi={setThumbnailCarouselApi}
+                                className="w-full max-w-sm mx-auto cursor-pointer"
+                            >
+                                <CarouselContent>
+                                {item.photos.map((photo, index) => (
+                                    <CarouselItem key={index}>
+                                        <div className="relative aspect-video">
+                                            <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                                        </div>
+                                    </CarouselItem>
+                                ))}
+                                </CarouselContent>
+                                {item.photos.length > 1 && (
+                                <>
+                                    <CarouselPrevious className="left-2" />
+                                    <CarouselNext className="right-2" />
+                                </>
+                                )}
+                            </Carousel>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4 bg-white dark:bg-neutral-900">
+                            <DialogHeader>
+                            <DialogTitle>Image Preview</DialogTitle>
+                            </DialogHeader>
+                            <div className='flex-1 relative'>
+                                <Carousel className="w-full h-full" setApi={setMainCarouselApi}>
+                                    <CarouselContent className="h-full">
+                                    {item.photos.map((photo, index) => (
+                                        <CarouselItem key={index} className="h-full">
+                                            <div className="relative w-full h-full">
+                                            <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
+                                            </div>
+                                        </CarouselItem>
+                                    ))}
+                                    </CarouselContent>
+                                    {item.photos.length > 1 && (
+                                    <>
+                                        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                                        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                                    </>
+                                    )}
+                                </Carousel>
+                            </div>
+                        </DialogContent>
                     </Dialog>
                   )}
                 </CardContent>
@@ -289,4 +312,3 @@ export default function InventoryPage() {
       </footer>
     </div>
   );
-}
