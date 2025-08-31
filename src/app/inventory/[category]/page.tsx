@@ -2,12 +2,12 @@
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, MouseEvent } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Plus, Camera, Trash2, Download, Images, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Plus, Camera, Trash2, Download, Images, X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +26,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 
 
 export default function InventoryPage() {
@@ -40,6 +40,8 @@ export default function InventoryPage() {
   const [filter, setFilter] = useState('all');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [previewPhotos, setPreviewPhotos] = useState<string[]>([]);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [transform, setTransform] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!category) {
@@ -73,7 +75,29 @@ export default function InventoryPage() {
   const openPreview = (photos: string[]) => {
     setPreviewPhotos(photos);
     setIsPreviewOpen(true);
+    setIsZoomed(false);
+    setTransform({ x: 0, y: 0 });
   };
+  
+  const closePreview = () => {
+    setIsPreviewOpen(false);
+    setPreviewPhotos([]);
+  }
+  
+  const handleZoomToggle = () => {
+    setIsZoomed(!isZoomed);
+    setTransform({ x: 0, y: 0 });
+  };
+  
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!isZoomed) return;
+    const { clientX, clientY, currentTarget } = e;
+    const { left, top, width, height } = currentTarget.getBoundingClientRect();
+    const x = ((clientX - left) / width - 0.5) * 100;
+    const y = ((clientY - top) / height - 0.5) * 100;
+    setTransform({ x, y });
+  };
+
 
   const handleDelete = (itemId: string) => {
      try {
@@ -327,32 +351,48 @@ export default function InventoryPage() {
         </Link>
       </footer>
 
-        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-            <DialogContent className="w-screen h-screen max-w-full max-h-full p-0 bg-black/80 flex items-center justify-center">
-                <DialogHeader className="absolute top-4 left-4 z-20">
+        <Dialog open={isPreviewOpen} onOpenChange={closePreview}>
+            <DialogContent className="w-screen h-screen max-w-full max-h-full p-0 bg-black/90 flex items-center justify-center border-0">
+                 <DialogHeader className="absolute top-4 left-4 z-50">
                     <DialogTitle className="text-white">Image Preview</DialogTitle>
                 </DialogHeader>
-                <Carousel className="w-full h-full" opts={{ loop: previewPhotos.length > 1 }}>
+                <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-50">
+                    <X className="h-8 w-8 text-white" />
+                    <span className="sr-only">Close</span>
+                </DialogClose>
+                <Carousel className="w-full h-full" opts={{ loop: previewPhotos.length > 1, onDrag: () => isZoomed }} onPointerDown={() => isZoomed && false} >
                     <CarouselContent className="h-full">
                         {previewPhotos.map((photo, index) => (
-                            <CarouselItem key={index} className="h-full flex items-center justify-center">
-                                <div className="relative w-full h-5/6">
-                                <Image
-                                    src={photo}
-                                    alt={`Enlarged inventory item ${index + 1}`}
-                                    fill
-                                    className="object-contain"
-                                />
+                            <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
+                                <div 
+                                    className="relative w-full h-full flex items-center justify-center"
+                                    onClick={handleZoomToggle}
+                                    onMouseMove={handleMouseMove}
+                                >
+                                    <Image
+                                        src={photo}
+                                        alt={`Enlarged inventory item ${index + 1}`}
+                                        width={2000}
+                                        height={2000}
+                                        className={cn(
+                                            "object-contain h-auto w-auto max-h-full max-w-full transition-transform duration-300 ease-in-out",
+                                            isZoomed ? "scale-[2.5] cursor-zoom-out" : "cursor-zoom-in"
+                                        )}
+                                        style={{
+                                            transform: isZoomed ? `scale(2.5) translate(${transform.x}%, ${transform.y}%)` : 'scale(1)',
+                                            transformOrigin: 'center center'
+                                        }}
+                                    />
                                 </div>
                             </CarouselItem>
                         ))}
                     </CarouselContent>
-                    {previewPhotos.length > 1 && (
+                    {previewPhotos.length > 1 && !isZoomed && (
                     <>
-                        <CarouselPrevious className="absolute left-4 z-20 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
+                        <CarouselPrevious className="absolute left-4 z-50 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
                             <ChevronLeft className="h-8 w-8" />
                         </CarouselPrevious>
-                        <CarouselNext className="absolute right-4 z-20 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
+                        <CarouselNext className="absolute right-4 z-50 text-white bg-black/50 hover:bg-black/70 h-12 w-12">
                             <ChevronRight className="h-8 w-8" />
                         </CarouselNext>
                     </>
@@ -363,4 +403,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-
