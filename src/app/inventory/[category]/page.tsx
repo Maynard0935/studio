@@ -38,7 +38,6 @@ export default function InventoryPage() {
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!category) {
@@ -216,35 +215,49 @@ export default function InventoryPage() {
                   <p>{item.description}</p>
                    {item.photos.length > 0 && (
                     <Dialog>
-                      <Carousel className="w-full max-w-xs mx-auto">
+                      <Carousel className="w-full max-w-sm mx-auto">
                         <CarouselContent>
                           {item.photos.map((photo, index) => (
                             <CarouselItem key={index}>
-                              <DialogTrigger asChild>
-                                <div className="relative aspect-video cursor-pointer" onClick={() => setSelectedImage(photo)}>
-                                  <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
-                                </div>
-                              </DialogTrigger>
+                                <DialogTrigger asChild>
+                                  <div className="relative aspect-video cursor-pointer">
+                                    <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                                  </div>
+                                </DialogTrigger>
                             </CarouselItem>
                           ))}
                         </CarouselContent>
                         {item.photos.length > 1 && (
                           <>
-                            <CarouselPrevious />
-                            <CarouselNext />
+                            <CarouselPrevious className="left-2" />
+                            <CarouselNext className="right-2" />
                           </>
                         )}
                       </Carousel>
-                       <DialogContent className="max-w-3xl w-full h-[80vh]">
-                          <DialogHeader>
-                            <DialogTitle>Image Preview</DialogTitle>
-                          </DialogHeader>
-                          {selectedImage && (
-                            <div className="relative h-full">
-                                <Image src={selectedImage} alt="Enlarged inventory item" fill className="object-contain" />
-                            </div>
-                          )}
-                        </DialogContent>
+                      <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4">
+                        <DialogHeader>
+                          <DialogTitle>Image Preview</DialogTitle>
+                        </DialogHeader>
+                        <div className='flex-1 relative'>
+                          <Carousel className="w-full h-full">
+                            <CarouselContent className="h-full">
+                              {item.photos.map((photo, index) => (
+                                <CarouselItem key={index} className="h-full">
+                                    <div className="relative w-full h-full">
+                                      <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
+                                    </div>
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                             {item.photos.length > 1 && (
+                              <>
+                                <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                                <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                              </>
+                            )}
+                          </Carousel>
+                        </div>
+                      </DialogContent>
                     </Dialog>
                   )}
                 </CardContent>
