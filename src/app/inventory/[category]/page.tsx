@@ -39,9 +39,9 @@ export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
-  const [thumbnailCarouselApi, setThumbnailCarouselApi] = useState<CarouselApi>()
+  const [selectedItemPhotos, setSelectedItemPhotos] = useState<string[]>([]);
   const [mainCarouselApi, setMainCarouselApi] = useState<CarouselApi>()
-  const [current, setCurrent] = useState(0)
+  const [thumbnailCarouselApi, setThumbnailCarouselApi] = useState<CarouselApi>()
 
   useEffect(() => {
     if (!category) {
@@ -232,14 +232,9 @@ export default function InventoryPage() {
                    {item.photos.length > 0 && (
                      <Dialog>
                         <DialogTrigger asChild>
-                            <div className="relative w-full max-w-sm mx-auto cursor-pointer group">
+                            <div className="relative w-full max-w-sm mx-auto cursor-pointer group" onClick={() => setSelectedItemPhotos(item.photos)}>
                                 <Carousel
                                     setApi={setThumbnailCarouselApi}
-                                    onClick={(e) => {
-                                        if (thumbnailCarouselApi) {
-                                            mainCarouselApi?.scrollTo(thumbnailCarouselApi.selectedScrollSnap())
-                                        }
-                                    }}
                                     className="w-full"
                                 >
                                     <CarouselContent>
@@ -258,30 +253,6 @@ export default function InventoryPage() {
                                 </div>
                             </div>
                         </DialogTrigger>
-                        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4 bg-white dark:bg-neutral-900">
-                            <DialogHeader>
-                            <DialogTitle>Image Preview</DialogTitle>
-                            </DialogHeader>
-                            <div className='flex-1 relative'>
-                                <Carousel className="w-full h-full" setApi={setMainCarouselApi}>
-                                    <CarouselContent className="h-full">
-                                    {item.photos.map((photo, index) => (
-                                        <CarouselItem key={index} className="h-full">
-                                            <div className="relative w-full h-full">
-                                            <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
-                                            </div>
-                                        </CarouselItem>
-                                    ))}
-                                    </CarouselContent>
-                                    {item.photos.length > 1 && (
-                                    <>
-                                        <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
-                                        <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
-                                    </>
-                                    )}
-                                </Carousel>
-                            </div>
-                        </DialogContent>
                     </Dialog>
                   )}
                 </CardContent>
@@ -311,6 +282,32 @@ export default function InventoryPage() {
             </Button>
         </Link>
       </footer>
+        <Dialog open={selectedItemPhotos.length > 0} onOpenChange={(open) => !open && setSelectedItemPhotos([])}>
+            <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4 bg-white dark:bg-neutral-900">
+                <DialogHeader>
+                <DialogTitle>Image Preview</DialogTitle>
+                </DialogHeader>
+                <div className='flex-1 relative'>
+                    <Carousel className="w-full h-full" setApi={setMainCarouselApi}>
+                        <CarouselContent className="h-full">
+                        {selectedItemPhotos.map((photo, index) => (
+                            <CarouselItem key={index} className="h-full">
+                                <div className="relative w-full h-full">
+                                <Image src={photo} alt={`Enlarged inventory item ${index + 1}`} fill className="object-contain" />
+                                </div>
+                            </CarouselItem>
+                        ))}
+                        </CarouselContent>
+                        {selectedItemPhotos.length > 1 && (
+                        <>
+                            <CarouselPrevious className="absolute left-2 top-1/2 -translate-y-1/2" />
+                            <CarouselNext className="absolute right-2 top-1/2 -translate-y-1/2" />
+                        </>
+                        )}
+                    </Carousel>
+                </div>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }
