@@ -22,7 +22,7 @@ export default function CategoriesPage() {
         ) as Record<CategoryName, number>;
         setInventoryCounts(counts);
       }
-    } catch (error) a.png
+    } catch (error) {
       console.error("Failed to load inventory from localStorage", error);
     }
   }, []);
