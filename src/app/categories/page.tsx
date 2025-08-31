@@ -65,7 +65,7 @@ export default function CategoriesPage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'snapstock_data.json';
+      link.download = 'Physical_Inventory.data.json';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -303,3 +303,5 @@ export default function CategoriesPage() {
     </div>
   );
 }
+
+    
