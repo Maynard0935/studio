@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Plus, Camera, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Camera, Trash2, Download } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
@@ -85,6 +85,55 @@ export default function InventoryPage() {
       });
     }
   }
+  
+  const exportToCSV = () => {
+    if (items.length === 0) {
+      toast({
+        title: "No Data",
+        description: "There is no inventory data in this category to export.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      let csvContent = "Category,Description,Date Created,Photo Count\n";
+      
+      items.forEach(item => {
+        const row = [
+          `"${categoryName}"`,
+          `"${item.description.replace(/"/g, '""')}"`,
+          `"${new Date(item.createdAt).toLocaleString()}"`,
+          item.photos.length
+        ].join(',');
+        csvContent += row + "\n";
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-t;' });
+      const link = document.createElement("a");
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `inventory_${categoryName}_${new Date().toISOString()}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+       toast({
+        title: "Export Successful",
+        description: `Your inventory for ${categoryName} has been downloaded as a CSV file.`,
+      });
+    } catch (error) {
+      console.error("Failed to export data", error);
+      toast({
+        title: "Export Failed",
+        description: "An error occurred while exporting your data.",
+        variant: "destructive"
+      });
+    }
+  };
+
 
   if (!category) {
     return null;
@@ -103,12 +152,18 @@ export default function InventoryPage() {
           <h1 className="text-2xl font-bold">{category.name}</h1>
           <p className="text-muted-foreground">{items.length} items</p>
         </div>
-        <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref>
-            <Button variant="outline" size="icon" className="bg-accent hover:bg-accent/90">
-                <Plus />
-                <span className="sr-only">Add New Item</span>
+        <div className='flex items-center gap-2'>
+            <Button variant="outline" size="icon" onClick={exportToCSV}>
+                <Download />
+                <span className="sr-only">Export to CSV</span>
             </Button>
-        </Link>
+            <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref>
+                <Button variant="outline" size="icon" className="bg-accent hover:bg-accent/90">
+                    <Plus />
+                    <span className="sr-only">Add New Item</span>
+                </Button>
+            </Link>
+        </div>
       </header>
 
       <main className="flex-1 p-4 md:p-6">

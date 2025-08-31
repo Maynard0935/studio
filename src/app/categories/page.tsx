@@ -31,60 +31,6 @@ export default function CategoriesPage() {
     }
   }, []);
 
-  const exportToCSV = () => {
-    try {
-      const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
-      if (!storedData) {
-        toast({
-          title: "No Data",
-          description: "There is no inventory data to export.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const inventory: InventoryData = JSON.parse(storedData);
-      
-      let csvContent = "Category,Description,Date Created,Photo Count\n";
-      
-      for (const categoryName in inventory) {
-        const items = inventory[categoryName as CategoryName] || [];
-        items.forEach(item => {
-          const row = [
-            `"${categoryName}"`,
-            `"${item.description.replace(/"/g, '""')}"`,
-            `"${new Date(item.createdAt).toLocaleString()}"`,
-            item.photos.length
-          ].join(',');
-          csvContent += row + "\n";
-        });
-      }
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-t;' });
-      const link = document.createElement("a");
-      if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `inventory_export_${new Date().toISOString()}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-       toast({
-        title: "Export Successful",
-        description: "Your inventory data has been downloaded as a CSV file.",
-      });
-    } catch (error) {
-      console.error("Failed to export data", error);
-      toast({
-        title: "Export Failed",
-        description: "An error occurred while exporting your data.",
-        variant: "destructive"
-      });
-    }
-  };
-
   return (
     <div className="flex min-h-screen flex-col items-center">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
@@ -95,10 +41,7 @@ export default function CategoriesPage() {
           </Button>
         </Link>
         <h1 className="text-2xl font-bold">Categories</h1>
-         <Button variant="outline" size="icon" onClick={exportToCSV}>
-            <Download />
-            <span className="sr-only">Export to CSV</span>
-        </Button>
+         <div className="w-10"></div>
       </header>
 
       <main className="w-full max-w-2xl flex-1 p-4 md:p-6">
