@@ -221,7 +221,7 @@ export default function InventoryPage() {
                                     {item.photos.map((photo, index) => (
                                         <CarouselItem key={index}>
                                             <div className="relative aspect-video">
-                                                <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                                                <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md border-2 border-white" />
                                             </div>
                                         </CarouselItem>
                                     ))}
