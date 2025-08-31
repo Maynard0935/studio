@@ -252,8 +252,8 @@ export default function InventoryPage() {
                                     ))}
                                     </CarouselContent>
                                 </Carousel>
-                                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                                    <Images className="h-3 w-3" />
+                                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-sm px-2.5 py-1.5 rounded-full flex items-center gap-1.5">
+                                    <Images className="h-4 w-4" />
                                     <span>{item.photos.length}</span>
                                 </div>
                             </div>
