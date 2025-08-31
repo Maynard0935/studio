@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription, CardFooter } from '@/components/ui/card';
-import { ArrowLeft, Plus, Camera, Trash2, Images, X, ChevronLeft, ChevronRight, Edit, Save, FileArchive } from 'lucide-react';
+import { ArrowLeft, Plus, Camera, Trash2, Images, X, ChevronLeft, ChevronRight, Edit, Save } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
@@ -28,8 +28,6 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
 
 
 export default function InventoryPage() {
@@ -220,46 +218,6 @@ export default function InventoryPage() {
     }
   };
 
-    const downloadAsZip = async () => {
-    const itemsToExport = filteredItems;
-    if (itemsToExport.length === 0) {
-      toast({ title: "No Data", description: "There are no items to export.", variant: "destructive", duration: 4000 });
-      return;
-    }
-
-    toast({ title: "Zipping...", description: "Your download will begin shortly." });
-
-    try {
-      const zip = new JSZip();
-      const categoryFolder = zip.folder(categoryName.replace(/[^a-zA-Z0-9]/g, '_'));
-
-      if (categoryFolder) {
-        for (const [itemIndex, item] of itemsToExport.entries()) {
-            const itemFolderName = `item_${item.id.substring(0, 8)}_${itemIndex + 1}`;
-            const itemFolder = categoryFolder.folder(itemFolderName);
-
-            if (itemFolder) {
-                itemFolder.file("description.txt", item.description);
-                for (const [photoIndex, photoDataUrl] of item.photos.entries()) {
-                    const base64Data = photoDataUrl.split(',')[1];
-                    itemFolder.file(`photo_${photoIndex + 1}.jpg`, base64Data, { base64: true });
-                }
-            }
-        }
-      }
-
-      const zipContent = await zip.generateAsync({ type: "blob" });
-      const date = new Date().toISOString().split('T')[0];
-      saveAs(zipContent, `inventory_${categoryName.replace(/[^a-zA-Z0-9]/g, '_')}_${date}.zip`);
-
-    } catch (error) {
-      console.error("Failed to create zip file", error);
-      toast({ title: "Zip Failed", description: "Could not create the zip file. Please try again.", variant: "destructive", duration: 4000 });
-    }
-  };
-
-
-
   if (!category) {
     return null;
   }
@@ -284,10 +242,6 @@ export default function InventoryPage() {
           <p className="text-muted-foreground text-sm sm:text-base">{items.length} items</p>
         </div>
         <div className='flex items-center gap-2'>
-            <Button variant="outline" size="icon" onClick={downloadAsZip}>
-                <FileArchive />
-                <span className="sr-only">Download as Zip</span>
-            </Button>
             <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref>
                 <Button variant="outline" size="icon" className="bg-accent hover:bg-accent/90">
                     <Plus />
