@@ -25,7 +25,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -110,7 +110,7 @@ export default function InventoryPage() {
       
       toast({
         title: "Status Updated",
-        description: `Item marked as ${isChecked ? 'Done' : 'Not Done'}.`,
+        description: `Item marked as ${isChecked ? 'Done' : 'Pending'}.`,
         duration: 2000,
       });
     } catch (error) {
@@ -146,7 +146,7 @@ export default function InventoryPage() {
           `"${item.description.replace(/"/g, '""')}"`,
           `"${new Date(item.createdAt).toLocaleString()}"`,
           item.photos.length,
-          `"${item.isUpdated ? 'Done Update' : 'Not Done'}"`
+          `"${item.isUpdated ? 'Done Update' : 'Pending'}"`
         ].join(',');
         csvContent += row + "\n";
       });
@@ -186,7 +186,7 @@ export default function InventoryPage() {
   
   const filteredItems = items.filter(item => {
     if (filter === 'done') return item.isUpdated;
-    if (filter === 'not-done') return !item.isUpdated;
+    if (filter === 'pending') return !item.isUpdated;
     return true; // 'all'
   });
 
@@ -222,7 +222,7 @@ export default function InventoryPage() {
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="all">All ({items.length})</TabsTrigger>
                 <TabsTrigger value="done">Done ({items.filter(i => i.isUpdated).length})</TabsTrigger>
-                <TabsTrigger value="not-done">Not Done ({items.filter(i => !i.isUpdated).length})</TabsTrigger>
+                <TabsTrigger value="pending">Pending ({items.filter(i => !i.isUpdated).length})</TabsTrigger>
             </TabsList>
         </Tabs>
         
@@ -320,3 +320,5 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+    
