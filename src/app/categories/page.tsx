@@ -1,13 +1,24 @@
+
 "use client";
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Plus, Download } from 'lucide-react';
-import { CATEGORIES, type CategoryName, INVENTORY_STORAGE_KEY, type InventoryData, type InventoryItem } from '@/lib/constants';
-import { useEffect, useState } from 'react';
+import { ArrowLeft, Plus, Upload, Download } from 'lucide-react';
+import { CATEGORIES, type CategoryName, INVENTORY_STORAGE_KEY, type InventoryData } from '@/lib/constants';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function CategoriesPage() {
     const router = useRouter();
@@ -15,6 +26,10 @@ export default function CategoriesPage() {
     const [inventoryCounts, setInventoryCounts] = useState<Record<CategoryName, number>>(() =>
     Object.fromEntries(CATEGORIES.map(c => [c.name, 0])) as Record<CategoryName, number>
   );
+  const [isImporting, setIsImporting] = useState(false);
+  const [importData, setImportData] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     try {
@@ -31,6 +46,103 @@ export default function CategoriesPage() {
     }
   }, []);
 
+  const handleExport = () => {
+    try {
+      const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
+      if (!storedData || storedData === '{}') {
+        toast({
+          title: "No Data to Export",
+          description: "Your inventory is empty.",
+          variant: "destructive",
+          duration: 4000,
+        });
+        return;
+      }
+
+      const blob = new Blob([storedData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'snapstock_data.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export Successful",
+        description: "Your inventory data has been downloaded.",
+        duration: 4000,
+      });
+
+    } catch (error) {
+      console.error("Export failed", error);
+      toast({
+        title: "Export Failed",
+        description: "An error occurred while exporting your data.",
+        variant: "destructive",
+        duration: 4000,
+      });
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          // Basic validation to check if it's a valid JSON
+          JSON.parse(content);
+          setImportData(content);
+        } catch (error) {
+          toast({
+            title: "Invalid File",
+            description: "The selected file is not a valid JSON backup file.",
+            variant: "destructive",
+            duration: 4000,
+          });
+          setImportData(null);
+        }
+      };
+      reader.readAsText(file);
+    }
+    // Reset file input to allow selecting the same file again
+    if(event.target) {
+        event.target.value = "";
+    }
+  };
+
+  const confirmImport = () => {
+    if (importData) {
+      try {
+        localStorage.setItem(INVENTORY_STORAGE_KEY, importData);
+        setImportData(null);
+        toast({
+          title: "Import Successful",
+          description: "Inventory data has been imported. The page will now reload.",
+          duration: 4000,
+        });
+        // Reload to reflect the new data
+        setTimeout(() => window.location.reload(), 1500);
+      } catch (error) {
+        console.error("Import failed", error);
+        toast({
+          title: "Import Failed",
+          description: "An error occurred while importing the data.",
+          variant: "destructive",
+          duration: 4000,
+        });
+      }
+    }
+  };
+
+
   return (
     <div className="flex min-h-screen flex-col items-center">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
@@ -41,7 +153,17 @@ export default function CategoriesPage() {
           </Button>
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
-         <div className="w-10"></div>
+        <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={handleImportClick}>
+                <Upload />
+                <span className="sr-only">Import Data</span>
+            </Button>
+            <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
+            <Button variant="outline" size="icon" onClick={handleExport}>
+                <Download />
+                <span className="sr-only">Export Data</span>
+            </Button>
+        </div>
       </header>
 
       <main className="w-full max-w-2xl flex-1 p-4 md:p-6">
@@ -79,6 +201,22 @@ export default function CategoriesPage() {
       <footer className="py-6 text-center text-muted-foreground">
         <p>PHYSICAL INVENTORY APP</p>
       </footer>
+      
+      <AlertDialog open={!!importData} onOpenChange={(open) => !open && setImportData(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Import</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to import this data? This will overwrite all current inventory data on this device. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setImportData(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmImport}>Import</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
-}
+
+    
