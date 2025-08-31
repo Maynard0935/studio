@@ -42,6 +42,7 @@ export default function InventoryPage() {
   const [selectedItemPhotos, setSelectedItemPhotos] = useState<string[]>([]);
   const [mainCarouselApi, setMainCarouselApi] = useState<CarouselApi>()
   const [thumbnailCarouselApi, setThumbnailCarouselApi] = useState<CarouselApi>()
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   useEffect(() => {
     if (!category) {
@@ -77,7 +78,7 @@ export default function InventoryPage() {
       return
     }
 
-    mainCarouselApi.on("select", () => {
+     mainCarouselApi.on("select", () => {
         thumbnailCarouselApi.scrollTo(mainCarouselApi.selectedScrollSnap())
     })
 
@@ -232,14 +233,14 @@ export default function InventoryPage() {
                    {item.photos.length > 0 && (
                      <Dialog>
                         <DialogTrigger asChild>
-                            <div className="relative w-full max-w-sm mx-auto cursor-pointer group" onClick={() => setSelectedItemPhotos(item.photos)}>
+                             <div className="relative w-full max-w-sm mx-auto cursor-pointer group" onClick={() => { setSelectedItemPhotos(item.photos); if (mainCarouselApi) mainCarouselApi.scrollTo(0, true)}}>
                                 <Carousel
                                     setApi={setThumbnailCarouselApi}
                                     className="w-full"
                                 >
                                     <CarouselContent>
                                     {item.photos.map((photo, index) => (
-                                        <CarouselItem key={index} >
+                                        <CarouselItem key={index}>
                                             <div className="relative aspect-video">
                                                 <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
                                             </div>
@@ -283,12 +284,12 @@ export default function InventoryPage() {
         </Link>
       </footer>
         <Dialog open={selectedItemPhotos.length > 0} onOpenChange={(open) => !open && setSelectedItemPhotos([])}>
-            <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4 bg-white dark:bg-neutral-900">
+            <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4">
                 <DialogHeader>
                 <DialogTitle>Image Preview</DialogTitle>
                 </DialogHeader>
                 <div className='flex-1 relative'>
-                    <Carousel className="w-full h-full" setApi={setMainCarouselApi}>
+                    <Carousel className="w-full h-full" setApi={setMainCarouselApi} opts={{ startIndex: selectedImageIndex, loop: true }}>
                         <CarouselContent className="h-full">
                         {selectedItemPhotos.map((photo, index) => (
                             <CarouselItem key={index} className="h-full">
