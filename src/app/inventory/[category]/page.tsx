@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription, CardFooter } from '@/components/ui/card';
-import { ArrowLeft, Plus, Camera, Trash2, Download, Images, X, ChevronLeft, ChevronRight, Edit, Save, FileArchive } from 'lucide-react';
+import { ArrowLeft, Plus, Camera, Trash2, Images, X, ChevronLeft, ChevronRight, Edit, Save, FileArchive } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
@@ -220,62 +220,6 @@ export default function InventoryPage() {
     }
   };
 
-
-  const exportToCSV = () => {
-    const itemsToExport = filteredItems;
-    if (itemsToExport.length === 0) {
-      toast({
-        title: "No Data",
-        description: "There are no items in the current filter to export.",
-        variant: "destructive",
-        duration: 4000
-      });
-      return;
-    }
-
-    try {
-      let csvContent = "Category,Description,Date Created,Date Updated,Photo Count,Status\n";
-      
-      itemsToExport.forEach(item => {
-        const row = [
-          `"${categoryName}"`,
-          `"${item.description.replace(/"/g, '""')}"`,
-          `"${new Date(item.createdAt).toLocaleString(undefined, dateTimeFormatOptions)}"`,
-          `"${item.updatedAt ? new Date(item.updatedAt).toLocaleString(undefined, dateTimeFormatOptions) : 'N/A'}"`,
-          item.photos.length,
-          `"${item.isUpdated ? 'Done Update' : 'Pending'}"`
-        ].join(',');
-        csvContent += row + "\n";
-      });
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement("a");
-      if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        const date = new Date().toISOString().split('T')[0];
-        link.setAttribute("href", url);
-        link.setAttribute("download", `${categoryName}_${date}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-       toast({
-        title: "Export Successful",
-        description: `Your inventory for ${categoryName} has been downloaded as a CSV file.`,
-        duration: 4000,
-      });
-    } catch (error) {
-      console.error("Failed to export data", error);
-      toast({
-        title: "Export Failed",
-        description: "An error occurred while exporting your data.",
-        variant: "destructive",
-        duration: 4000,
-      });
-    }
-  };
-  
     const downloadAsZip = async () => {
     const itemsToExport = filteredItems;
     if (itemsToExport.length === 0) {
@@ -343,10 +287,6 @@ export default function InventoryPage() {
             <Button variant="outline" size="icon" onClick={downloadAsZip}>
                 <FileArchive />
                 <span className="sr-only">Download as Zip</span>
-            </Button>
-            <Button variant="outline" size="icon" onClick={exportToCSV}>
-                <Download />
-                <span className="sr-only">Export to CSV</span>
             </Button>
             <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref>
                 <Button variant="outline" size="icon" className="bg-accent hover:bg-accent/90">
