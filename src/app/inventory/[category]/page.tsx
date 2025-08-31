@@ -359,7 +359,7 @@ export default function InventoryPage() {
                 </DialogClose>
 
                 {selectedItemPhotos && (
-                    <Carousel className="w-full h-full" opts={{ loop: selectedItemPhotos.length > 1, draggable: !isZoomed }}>
+                    <Carousel className="w-full h-full flex items-center justify-center" opts={{ loop: selectedItemPhotos.length > 1, draggable: !isZoomed }}>
                         <CarouselContent className="h-full">
                             {selectedItemPhotos.map((photo, index) => (
                                 <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
