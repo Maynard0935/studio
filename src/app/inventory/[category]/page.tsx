@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
-import { ArrowLeft, Plus, Camera, Trash2, Download } from 'lucide-react';
+import { ArrowLeft, Plus, Camera, Trash2, Download, Images } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
@@ -232,25 +232,31 @@ export default function InventoryPage() {
                    {item.photos.length > 0 && (
                      <Dialog>
                         <DialogTrigger asChild>
-                            <Carousel
-                                setApi={setThumbnailCarouselApi}
-                                onClick={(e) => {
-                                    if (thumbnailCarouselApi) {
-                                        mainCarouselApi?.scrollTo(thumbnailCarouselApi.selectedScrollSnap())
-                                    }
-                                }}
-                                className="w-full max-w-sm mx-auto cursor-pointer"
-                            >
-                                <CarouselContent>
-                                {item.photos.map((photo, index) => (
-                                    <CarouselItem key={index} >
-                                        <div className="relative aspect-video">
-                                            <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
-                                        </div>
-                                    </CarouselItem>
-                                ))}
-                                </CarouselContent>
-                            </Carousel>
+                            <div className="relative w-full max-w-sm mx-auto cursor-pointer group">
+                                <Carousel
+                                    setApi={setThumbnailCarouselApi}
+                                    onClick={(e) => {
+                                        if (thumbnailCarouselApi) {
+                                            mainCarouselApi?.scrollTo(thumbnailCarouselApi.selectedScrollSnap())
+                                        }
+                                    }}
+                                    className="w-full"
+                                >
+                                    <CarouselContent>
+                                    {item.photos.map((photo, index) => (
+                                        <CarouselItem key={index} >
+                                            <div className="relative aspect-video">
+                                                <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                                            </div>
+                                        </CarouselItem>
+                                    ))}
+                                    </CarouselContent>
+                                </Carousel>
+                                <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                    <Images className="h-3 w-3" />
+                                    <span>{item.photos.length}</span>
+                                </div>
+                            </div>
                         </DialogTrigger>
                         <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col p-4 bg-white dark:bg-neutral-900">
                             <DialogHeader>
