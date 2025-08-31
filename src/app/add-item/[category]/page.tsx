@@ -8,10 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2 } from 'lucide-react';
 import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
+import { storage } from '@/lib/firebase';
+import { ref, uploadString, getDownloadURL } from "firebase/storage";
 
 export default function AddItemPage() {
   const router = useRouter();
@@ -23,6 +25,7 @@ export default function AddItemPage() {
   const [description, setDescription] = useState('');
   const [photos, setPhotos] = useState<string[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,6 +41,7 @@ export default function AddItemPage() {
   }, [category, router, toast]);
 
   const handleTakePhotoClick = () => {
+    if (isSaving) return;
     fileInputRef.current?.click();
   };
 
@@ -124,7 +128,7 @@ export default function AddItemPage() {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const saveItem = () => {
+  const saveItem = async () => {
     if (photos.length === 0) {
       toast({
         title: "No Photos",
@@ -141,15 +145,27 @@ export default function AddItemPage() {
         });
         return;
     }
+    
+    setIsSaving(true);
 
     try {
+      const photoURLs: string[] = [];
+
+      for (const photoDataUrl of photos) {
+        const fileName = `${categoryName.replace(/\s+/g, '-')}/${new Date().toISOString()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
+        const storageRef = ref(storage, fileName);
+        const uploadResult = await uploadString(storageRef, photoDataUrl, 'data_url');
+        const downloadURL = await getDownloadURL(uploadResult.ref);
+        photoURLs.push(downloadURL);
+      }
+
       const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
       const inventory: InventoryData = storedData ? JSON.parse(storedData) : {};
 
       const newItem: InventoryItem = {
         id: new Date().toISOString() + Math.random(),
         description,
-        photos,
+        photos: photoURLs,
         createdAt: new Date().toISOString(),
       };
       
@@ -166,7 +182,7 @@ export default function AddItemPage() {
 
       router.push('/categories');
     } catch (error) {
-      console.error("Failed to save item to localStorage", error);
+      console.error("Failed to save item", error);
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
          toast({
             title: "Storage Full",
@@ -176,10 +192,12 @@ export default function AddItemPage() {
       } else {
         toast({
             title: "Save Failed",
-            description: "There was an error saving your item.",
+            description: "There was an error saving your item. Please check your network connection and try again.",
             variant: "destructive",
         });
       }
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -191,7 +209,7 @@ export default function AddItemPage() {
     <div className="flex min-h-screen flex-col">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <Link href="/categories" passHref>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" disabled={isSaving}>
             <ArrowLeft />
             <span className="sr-only">Back</span>
           </Button>
@@ -214,6 +232,7 @@ export default function AddItemPage() {
                     placeholder={`Enter details for the item in ${category.name}...`}
                     className="mt-2"
                     rows={4}
+                    disabled={isSaving}
                 />
             </CardContent>
         </Card>
@@ -222,7 +241,7 @@ export default function AddItemPage() {
             <CardContent className="p-4">
                 <div className="flex justify-between items-center mb-4">
                     <Label className="font-semibold">Photos ({photos.length})</Label>
-                    <Button onClick={handleTakePhotoClick} className="bg-primary hover:bg-primary/90">
+                    <Button onClick={handleTakePhotoClick} className="bg-primary hover:bg-primary/90" disabled={isSaving}>
                         <Camera className="mr-2 h-4 w-4" />
                         Add Photo
                     </Button>
@@ -233,6 +252,7 @@ export default function AddItemPage() {
                         ref={fileInputRef}
                         onChange={handleFileChange}
                         className="hidden"
+                        disabled={isSaving}
                     />
                 </div>
                 
@@ -241,12 +261,14 @@ export default function AddItemPage() {
                         {photos.map((photo, index) => (
                         <div key={index} className="relative group aspect-square">
                             <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
-                            <Button variant="destructive" size="icon" onClick={() => deletePhoto(index)}>
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Delete photo</span>
-                            </Button>
-                            </div>
+                            {!isSaving && (
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
+                                <Button variant="destructive" size="icon" onClick={() => deletePhoto(index)}>
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Delete photo</span>
+                                </Button>
+                              </div>
+                            )}
                         </div>
                         ))}
                     </div>
@@ -261,12 +283,12 @@ export default function AddItemPage() {
       </main>
 
       <footer className="sticky bottom-0 bg-background/80 backdrop-blur-sm p-4 border-t">
-        <Button onClick={saveItem} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" size="lg">
-          Save Item
+        <Button onClick={saveItem} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" size="lg" disabled={isSaving}>
+           {isSaving ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : 'Save Item'}
         </Button>
       </footer>
 
-      <Dialog open={!!previewImage} onOpenChange={(open) => !open && cancelPhoto()}>
+      <Dialog open={!!previewImage && !isSaving} onOpenChange={(open) => !open && cancelPhoto()}>
         <DialogContent className="max-w-md w-full">
           <DialogHeader>
             <DialogTitle>Confirm Photo</DialogTitle>
