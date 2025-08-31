@@ -21,6 +21,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -31,6 +38,7 @@ export default function InventoryPage() {
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!category) {
@@ -206,24 +214,38 @@ export default function InventoryPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p>{item.description}</p>
-                  {item.photos.length > 0 && (
-                    <Carousel className="w-full max-w-xs mx-auto">
-                      <CarouselContent>
-                        {item.photos.map((photo, index) => (
-                          <CarouselItem key={index}>
-                             <div className="relative aspect-video">
-                                <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
-                            </div>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      {item.photos.length > 1 && (
-                        <>
+                   {item.photos.length > 0 && (
+                    <Dialog>
+                      <Carousel className="w-full max-w-xs mx-auto">
+                        <CarouselContent>
+                          {item.photos.map((photo, index) => (
+                            <CarouselItem key={index}>
+                              <DialogTrigger asChild>
+                                <div className="relative aspect-video cursor-pointer" onClick={() => setSelectedImage(photo)}>
+                                  <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                                </div>
+                              </DialogTrigger>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        {item.photos.length > 1 && (
+                          <>
                             <CarouselPrevious />
                             <CarouselNext />
-                        </>
-                      )}
-                    </Carousel>
+                          </>
+                        )}
+                      </Carousel>
+                       <DialogContent className="max-w-3xl w-full h-[80vh]">
+                          <DialogHeader>
+                            <DialogTitle>Image Preview</DialogTitle>
+                          </DialogHeader>
+                          {selectedImage && (
+                            <div className="relative h-full">
+                                <Image src={selectedImage} alt="Enlarged inventory item" fill className="object-contain" />
+                            </div>
+                          )}
+                        </DialogContent>
+                    </Dialog>
                   )}
                 </CardContent>
               </Card>
