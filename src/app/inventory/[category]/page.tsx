@@ -109,12 +109,13 @@ export default function InventoryPage() {
         csvContent += row + "\n";
       });
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-t;' });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement("a");
       if (link.download !== undefined) {
         const url = URL.createObjectURL(blob);
+        const date = new Date().toISOString().split('T')[0];
         link.setAttribute("href", url);
-        link.setAttribute("download", `inventory_${categoryName}_${new Date().toISOString()}.csv`);
+        link.setAttribute("download", `${categoryName}_${date}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
