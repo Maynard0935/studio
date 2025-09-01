@@ -287,7 +287,7 @@ export default function CategoriesPage() {
 
       <footer className="w-full border-t border-border/40 mt-auto bg-background/95 backdrop-blur-sm py-4">
         <div className="container mx-auto flex items-center justify-center">
-            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Physical Inventory App. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} SPMS Physical Inventory App. All rights reserved.</p>
         </div>
       </footer>
       
