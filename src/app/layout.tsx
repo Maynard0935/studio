@@ -4,8 +4,11 @@ import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: 'Physical Inventory App',
-  description: 'Physical Inventory App',
+  description: 'A simple and efficient way to track your physical assets.',
   manifest: '/manifest.json',
+  icons: {
+    apple: "/inventory_app_icon.png",
+  },
 };
 
 export default function RootLayout({

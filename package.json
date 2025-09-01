@@ -9,8 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "postinstall": "mkdir -p public/icons"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.14.1",
