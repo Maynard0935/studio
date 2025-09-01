@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2 } from 'lucide-react';
-import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
+import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2, Cpu, Monitor, Keyboard, Mouse, Speaker } from 'lucide-react';
+import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -25,6 +25,24 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 
+// Define UPS and Camera as inline SVGs
+const UpsIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M7 2h10v2H7zM5 4h14v14H5zM12 8v6m-3-3h6"/></svg>
+);
+const CameraIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+);
+
+const IT_PARTS = [
+    { name: 'CPU', icon: Cpu },
+    { name: 'Monitor', icon: Monitor },
+    { name: 'Keyboard', icon: Keyboard },
+    { name: 'Mouse', icon: Mouse },
+    { name: 'UPS', icon: UpsIcon },
+    { name: 'Speaker', icon: Speaker },
+    { name: 'Camera', icon: CameraIcon },
+] as const;
+
 export default function AddItemPage() {
   const router = useRouter();
   const params = useParams();
@@ -36,10 +54,11 @@ export default function AddItemPage() {
   const [endUser, setEndUser] = useState('');
   const [location, setLocation] = useState('');
   const [moreDetails, setMoreDetails] = useState('');
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<InventoryPhoto[]>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [photoToDeleteIndex, setPhotoToDeleteIndex] = useState<number | null>(null);
+  const [partSelectionImage, setPartSelectionImage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -65,7 +84,12 @@ export default function AddItemPage() {
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPreviewImage(e.target?.result as string);
+        const result = e.target?.result as string;
+        if (categoryName === 'IT EQUIPMENT') {
+            setPartSelectionImage(result);
+        } else {
+            addPhoto(result);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -85,7 +109,6 @@ export default function AddItemPage() {
                 if (width > maxSize) {
                     height *= maxSize / width;
                     width = maxSize;
-                    
                 }
             } else {
                 if (height > maxSize) {
@@ -108,36 +131,42 @@ export default function AddItemPage() {
         };
         img.src = dataUrl;
     });
-};
-
-
-  const confirmPhoto = async () => {
-    if (previewImage) {
-        try {
-            const compressedImage = await compressImage(previewImage);
-            setPhotos((prev) => [...prev, compressedImage]);
-            setPreviewImage(null);
-        } catch (error) {
-            console.error("Failed to compress image", error);
-            toast({
-                title: "Processing Failed",
-                description: "Could not process the image. Please try again.",
-                variant: "destructive",
-                duration: 4000,
-            });
-            setPhotos((prev) => [...prev, previewImage]);
-            setPreviewImage(null);
-        }
-    }
-};
-
-  const retakePhoto = () => {
-    setPreviewImage(null);
-    handleTakePhotoClick();
   };
 
-  const cancelPhoto = () => {
-    setPreviewImage(null);
+  const addPhoto = async (imageData: string, part?: string) => {
+    try {
+        const compressedImage = await compressImage(imageData);
+        const newPhoto: InventoryPhoto = { url: compressedImage };
+        if (part) {
+            newPhoto.part = part;
+        }
+        setPhotos((prev) => [...prev, newPhoto]);
+    } catch (error) {
+        console.error("Failed to compress image", error);
+        toast({
+            title: "Processing Failed",
+            description: "Could not process the image. Please try again.",
+            variant: "destructive",
+            duration: 4000,
+        });
+        const newPhoto: InventoryPhoto = { url: imageData };
+         if (part) {
+            newPhoto.part = part;
+        }
+        setPhotos((prev) => [...prev, newPhoto]);
+    }
+  }
+
+
+  const handlePartSelection = (partName: typeof IT_PARTS[number]['name']) => {
+    if (partSelectionImage) {
+        addPhoto(partSelectionImage, partName);
+        setPartSelectionImage(null);
+    }
+  };
+
+  const cancelPartSelection = () => {
+    setPartSelectionImage(null);
   };
   
   const handleDeleteRequest = (index: number) => {
@@ -246,7 +275,7 @@ export default function AddItemPage() {
       
       <main className="flex-1 p-4 md:p-6 space-y-6">
         <Card>
-            <CardContent className="space-y-4">
+            <CardContent className="p-4 space-y-4">
                 <div>
                     <Label htmlFor="accountableOfficer" className="font-semibold">Accountable Officer</Label>
                     <Input
@@ -296,7 +325,7 @@ export default function AddItemPage() {
         </Card>
         
         <Card>
-            <CardContent>
+            <CardContent className="p-4">
                 <div className="flex justify-between items-center mb-4">
                     <Label className="font-semibold">Photos ({photos.length})</Label>
                     <Button onClick={handleTakePhotoClick} className="bg-primary hover:bg-primary/90" disabled={isSaving}>
@@ -318,7 +347,12 @@ export default function AddItemPage() {
                     <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-4">
                         {photos.map((photo, index) => (
                         <div key={index} className="relative group aspect-square">
-                            <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                            <Image src={photo.url} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                            {photo.part && (
+                                <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                                    {photo.part}
+                                </div>
+                            )}
                             {!isSaving && (
                               <Button 
                                 variant="destructive" 
@@ -347,26 +381,6 @@ export default function AddItemPage() {
            {isSaving ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : 'Save Item'}
         </Button>
       </footer>
-
-      <Dialog open={!!previewImage && !isSaving} onOpenChange={(open) => !open && cancelPhoto()}>
-        <DialogContent className="max-w-md w-full">
-          <DialogHeader>
-            <DialogTitle>Confirm Photo</DialogTitle>
-          </DialogHeader>
-          {previewImage && <Image src={previewImage} alt="Preview" width={400} height={400} className="rounded-md object-contain max-h-[60vh] w-full" />}
-          <DialogFooter className="grid grid-cols-3 gap-2 mt-4">
-            <Button variant="outline" onClick={cancelPhoto}>
-                <X className="mr-2 h-4 w-4" /> Cancel
-            </Button>
-            <Button variant="outline" onClick={retakePhoto}>
-                <RefreshCw className="mr-2 h-4 w-4" /> Retake
-            </Button>
-            <Button onClick={confirmPhoto} className="bg-primary hover:bg-primary/90">
-                <Check className="mr-2 h-4 w-4" /> Confirm
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       
       <AlertDialog open={photoToDeleteIndex !== null} onOpenChange={(open) => !open && setPhotoToDeleteIndex(null)}>
         <AlertDialogContent>
@@ -382,10 +396,28 @@ export default function AddItemPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!partSelectionImage} onOpenChange={(open) => !open && cancelPartSelection()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Part</DialogTitle>
+          </DialogHeader>
+          {partSelectionImage && <Image src={partSelectionImage} alt="Selected part preview" width={400} height={400} className="rounded-md object-contain max-h-[50vh] w-full" />}
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            {IT_PARTS.map(part => (
+              <Button key={part.name} variant="outline" onClick={() => handlePartSelection(part.name)}>
+                <part.icon className="mr-2 h-4 w-4" />
+                {part.name}
+              </Button>
+            ))}
+          </div>
+           <DialogFooter className="mt-4">
+            <Button variant="ghost" onClick={cancelPartSelection}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
-    
 
     
