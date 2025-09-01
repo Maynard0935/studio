@@ -1,6 +1,7 @@
+
 {
   "name": "Physical Inventory App",
-  "short_name": "Inventory",
+  "short_name": "InventoryApp",
   "description": "A simple and efficient way to track your physical assets.",
   "icons": [
     {
@@ -14,8 +15,8 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#facc15",
-  "background_color": "#111827",
+  "theme_color": "#0a192f",
+  "background_color": "#0a192f",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait"
