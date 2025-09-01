@@ -80,7 +80,7 @@ export default function InventoryPage() {
         // This is a migration step for old data that might still store photos as strings
         const migratedItems = categoryItems.map(item => ({
             ...item,
-            photos: item.photos.map(p => typeof p === 'string' ? { url: p } : p)
+            photos: Array.isArray(item.photos) ? item.photos.map(p => typeof p === 'string' ? { url: p } : p) : []
         }));
 
         setItems(migratedItems);
@@ -262,14 +262,7 @@ export default function InventoryPage() {
           <h1 className="text-xl sm:text-2xl font-bold truncate">{category.name}</h1>
           <p className="text-muted-foreground text-sm sm:text-base">{items.length} items</p>
         </div>
-        <div className='flex items-center gap-2'>
-            <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref>
-                <Button variant="outline" size="icon" className="bg-accent hover:bg-accent/90">
-                    <Plus />
-                    <span className="sr-only">Add New Item</span>
-                </Button>
-            </Link>
-        </div>
+        <div className="w-24"></div>
       </header>
 
       <main className="flex-1 p-4 md:p-6">
@@ -351,7 +344,7 @@ export default function InventoryPage() {
                         </div>
                       )}
                       
-                      {item.photos.length > 0 && (
+                      {item.photos && item.photos.length > 0 && (
                           <div className={cn("relative w-full max-w-sm mx-auto group", editingItemId !== item.id && "cursor-pointer")} onClick={() => openPreview(item.photos)}>
                               <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
                                   <CarouselContent>
