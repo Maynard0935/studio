@@ -229,7 +229,7 @@ export default function AddItemPage() {
         duration: 3000,
       });
 
-      router.push('/categories');
+      router.push(`/inventory/${encodeURIComponent(categoryName)}`);
     } catch (error) {
       console.error("Failed to save item", error);
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
