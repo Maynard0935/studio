@@ -232,23 +232,23 @@ export default function CategoriesPage() {
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <Link href="/" passHref>
           <Button className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
-            <ArrowLeft />
-            Back
+            <ArrowLeft className="sm:mr-2" />
+            <span className="hidden sm:inline">Back</span>
           </Button>
         </Link>
         <div className="flex items-center gap-2">
             <Button size="sm" onClick={handleImportClick} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
-                <Download className="mr-2 h-4 w-4" />
-                Import
+                <Download className="sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Import</span>
             </Button>
             <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
             <Button size="sm" onClick={() => setShowExportConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
-                <Upload className="mr-2 h-4 w-4" />
-                Export
+                <Upload className="sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
             </Button>
              <Button size="sm" onClick={() => setShowZipConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
-                <FileArchive className="mr-2 h-4 w-4" />
-                Zip
+                <FileArchive className="sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Zip</span>
             </Button>
         </div>
       </header>

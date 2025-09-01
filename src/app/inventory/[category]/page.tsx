@@ -254,8 +254,8 @@ export default function InventoryPage() {
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <Link href="/categories" passHref>
           <Button className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
-            <ArrowLeft />
-            Back
+            <ArrowLeft className="sm:mr-2" />
+            <span className="hidden sm:inline">Back</span>
           </Button>
         </Link>
         <div className="text-center flex-1 mx-4 overflow-hidden">

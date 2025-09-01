@@ -85,11 +85,7 @@ export default function AddItemPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        if (categoryName === 'IT EQUIPMENT') {
-            setPartSelectionImage(result);
-        } else {
-            addPhoto(result);
-        }
+        addPhoto(result);
       };
       reader.readAsDataURL(file);
     }
@@ -134,6 +130,11 @@ export default function AddItemPage() {
   };
 
   const addPhoto = async (imageData: string, part?: string) => {
+    if (categoryName === 'IT EQUIPMENT' && !part) {
+        setPartSelectionImage(imageData);
+        return;
+    }
+
     try {
         const compressedImage = await compressImage(imageData);
         const newPhoto: InventoryPhoto = { url: compressedImage };
@@ -263,8 +264,8 @@ export default function AddItemPage() {
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <Link href={`/inventory/${encodeURIComponent(categoryName)}`} passHref>
           <Button className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground" disabled={isSaving}>
-            <ArrowLeft />
-            Back
+            <ArrowLeft className="sm:mr-2" />
+            <span className="hidden sm:inline">Back</span>
           </Button>
         </Link>
         <div className="text-center">
