@@ -65,7 +65,7 @@ export default function InventoryPage() {
             title: "Invalid Category",
             description: "The category does not exist.",
             variant: "destructive",
-            duration: 4000,
+            duration: 3000,
         });
         router.push('/categories');
         return;
@@ -91,7 +91,7 @@ export default function InventoryPage() {
         title: "Load Failed",
         description: "There was an error loading your inventory.",
         variant: "destructive",
-        duration: 4000,
+        duration: 3000,
       });
     }
   }, [category, categoryName, router, toast]);
@@ -137,7 +137,7 @@ export default function InventoryPage() {
       toast({
         title: "Item Deleted!",
         description: "The item has been removed from your inventory.",
-        duration: 4000,
+        duration: 3000,
       });
     } catch (error) {
       console.error("Failed to delete item from localStorage", error);
@@ -145,7 +145,7 @@ export default function InventoryPage() {
         title: "Delete Failed",
         description: "There was an error deleting your item.",
         variant: "destructive",
-        duration: 4000,
+        duration: 3000,
       });
     }
   }
@@ -175,7 +175,7 @@ export default function InventoryPage() {
         title: "Update Failed",
         description: "There was an error updating the item status.",
         variant: "destructive",
-        duration: 4000,
+        duration: 3000,
       });
     }
   };
@@ -198,7 +198,7 @@ export default function InventoryPage() {
           title: "Incomplete Details",
           description: "Accountable Officer cannot be empty.",
           variant: "destructive",
-          duration: 4000
+          duration: 3000
         });
         return;
     }
@@ -234,7 +234,7 @@ export default function InventoryPage() {
         title: "Update Failed",
         description: "There was an error updating the item.",
         variant: "destructive",
-        duration: 4000,
+        duration: 3000,
       });
     }
   };

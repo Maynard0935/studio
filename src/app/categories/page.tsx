@@ -58,7 +58,7 @@ export default function CategoriesPage() {
           title: "No Data to Export",
           description: "Your inventory is empty.",
           variant: "destructive",
-          duration: 4000,
+          duration: 3000,
         });
         return;
       }
@@ -76,7 +76,7 @@ export default function CategoriesPage() {
       toast({
         title: "Export Successful",
         description: "Your inventory data has been downloaded.",
-        duration: 4000,
+        duration: 3000,
       });
 
     } catch (error) {
@@ -85,7 +85,7 @@ export default function CategoriesPage() {
         title: "Export Failed",
         description: "An error occurred while exporting your data.",
         variant: "destructive",
-        duration: 4000,
+        duration: 3000,
       });
     }
   };
@@ -94,7 +94,7 @@ export default function CategoriesPage() {
     setShowZipConfirm(false);
     const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
     if (!storedData || storedData === '{}') {
-      toast({ title: "No Data", description: "There is no inventory to export.", variant: "destructive", duration: 4000 });
+      toast({ title: "No Data", description: "There is no inventory to export.", variant: "destructive", duration: 3000 });
       return;
     }
 
@@ -117,7 +117,7 @@ export default function CategoriesPage() {
               const descriptionText = `Accountable Officer: ${item.accountableOfficer}\nEnd-user: ${item.endUser}\nLocation: ${item.location}\nMore Details: ${item.moreDetails}`;
               itemFolder.file("description.txt", descriptionText);
               for (const [photoIndex, photoDataUrl] of item.photos.entries()) {
-                const base64Data = photoDataUrl.split(',')[1];
+                const base64Data = photoDataUrl.url.split(',')[1];
                 itemFolder.file(`photo_${photoIndex + 1}.jpg`, base64Data, { base64: true });
               }
             }
@@ -131,7 +131,7 @@ export default function CategoriesPage() {
 
     } catch (error) {
       console.error("Failed to create zip file", error);
-      toast({ title: "Zip Failed", description: "Could not create the zip file. Please try again.", variant: "destructive", duration: 4000 });
+      toast({ title: "Zip Failed", description: "Could not create the zip file. Please try again.", variant: "destructive", duration: 3000 });
     }
   };
 
@@ -155,7 +155,7 @@ export default function CategoriesPage() {
             title: "Invalid File",
             description: "The selected file is not a valid JSON backup file.",
             variant: "destructive",
-            duration: 4000,
+            duration: 3000,
           });
           setImportData(null);
         }
@@ -210,7 +210,7 @@ export default function CategoriesPage() {
         toast({
           title: "Import Successful",
           description: "Inventory data has been merged. The page will now reload.",
-          duration: 4000,
+          duration: 3000,
         });
         // Reload to reflect the new data
         setTimeout(() => window.location.reload(), 1500);
@@ -220,7 +220,7 @@ export default function CategoriesPage() {
           title: "Import Failed",
           description: "An error occurred while merging the data.",
           variant: "destructive",
-          duration: 4000,
+          duration: 3000,
         });
       }
     }

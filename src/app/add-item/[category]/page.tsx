@@ -55,7 +55,6 @@ export default function AddItemPage() {
   const [location, setLocation] = useState('');
   const [moreDetails, setMoreDetails] = useState('');
   const [photos, setPhotos] = useState<InventoryPhoto[]>([]);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [photoToDeleteIndex, setPhotoToDeleteIndex] = useState<number | null>(null);
   const [partSelectionImage, setPartSelectionImage] = useState<string | null>(null);
@@ -68,7 +67,7 @@ export default function AddItemPage() {
             title: "Invalid Category",
             description: "The category does not exist.",
             variant: "destructive",
-            duration: 4000,
+            duration: 3000,
         });
         router.push('/categories');
     }
@@ -147,7 +146,7 @@ export default function AddItemPage() {
             title: "Processing Failed",
             description: "Could not process the image. Please try again.",
             variant: "destructive",
-            duration: 4000,
+            duration: 3000,
         });
         const newPhoto: InventoryPhoto = { url: imageData };
          if (part) {
@@ -187,7 +186,7 @@ export default function AddItemPage() {
         title: "No Photos",
         description: "Please add at least one photo.",
         variant: "destructive",
-        duration: 4000,
+        duration: 3000,
       });
       return;
     }
@@ -196,7 +195,7 @@ export default function AddItemPage() {
           title: "Incomplete Details",
           description: "Please fill out the Accountable Officer field.",
           variant: "destructive",
-          duration: 4000,
+          duration: 3000,
         });
         return;
     }
@@ -227,7 +226,7 @@ export default function AddItemPage() {
       toast({
         title: "Item Saved!",
         description: `Your item has been saved to ${categoryName}.`,
-        duration: 4000,
+        duration: 3000,
       });
 
       router.push('/categories');
@@ -238,14 +237,14 @@ export default function AddItemPage() {
             title: "Storage Full",
             description: "Cannot save item. Your device storage for this app is full.",
             variant: "destructive",
-            duration: 4000,
+            duration: 3000,
         });
       } else {
         toast({
             title: "Save Failed",
             description: "There was an error saving your item. Please try again.",
             variant: "destructive",
-            duration: 4000,
+            duration: 3000,
         });
       }
     } finally {
