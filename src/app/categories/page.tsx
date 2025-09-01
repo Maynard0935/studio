@@ -231,22 +231,22 @@ export default function CategoriesPage() {
     <div className="flex min-h-screen flex-col items-center">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <Link href="/" passHref>
-          <Button variant="outline" className="text-accent border-accent">
+          <Button className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
             <ArrowLeft />
             Back
           </Button>
         </Link>
         <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleImportClick} className="bg-primary/10 hover:bg-primary/20">
+            <Button size="sm" onClick={handleImportClick} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
                 <Download className="mr-2 h-4 w-4" />
                 Import
             </Button>
             <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
-            <Button variant="outline" size="sm" onClick={() => setShowExportConfirm(true)} className="bg-primary/10 hover:bg-primary/20">
+            <Button size="sm" onClick={() => setShowExportConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
                 <Upload className="mr-2 h-4 w-4" />
                 Export
             </Button>
-             <Button variant="outline" size="sm" onClick={() => setShowZipConfirm(true)} className="bg-primary/10 hover:bg-primary/20">
+             <Button size="sm" onClick={() => setShowZipConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
                 <FileArchive className="mr-2 h-4 w-4" />
                 Zip
             </Button>

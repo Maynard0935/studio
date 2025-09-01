@@ -167,7 +167,7 @@ export default function InventoryPage() {
       toast({
         title: "Status Updated",
         description: `Item marked as ${isChecked ? 'Done' : 'Pending'}.`,
-        duration: 2000,
+        duration: 3000,
       });
     } catch (error) {
       console.error("Failed to update item status", error);
@@ -226,7 +226,7 @@ export default function InventoryPage() {
       toast({
         title: "Item Updated",
         description: `The item details have been saved.`,
-        duration: 2000,
+        duration: 3000,
       });
     } catch (error) {
       console.error("Failed to update item", error);
@@ -253,7 +253,7 @@ export default function InventoryPage() {
     <div className="flex min-h-screen flex-col">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <Link href="/categories" passHref>
-          <Button variant="outline" className="text-accent border-accent">
+          <Button className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
             <ArrowLeft />
             Back
           </Button>
@@ -491,5 +491,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-
-    

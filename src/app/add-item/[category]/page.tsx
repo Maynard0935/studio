@@ -58,6 +58,7 @@ export default function AddItemPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [photoToDeleteIndex, setPhotoToDeleteIndex] = useState<number | null>(null);
   const [partSelectionImage, setPartSelectionImage] = useState<string | null>(null);
+  const [imageForConfirmation, setImageForConfirmation] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -154,6 +155,7 @@ export default function AddItemPage() {
         }
         setPhotos((prev) => [...prev, newPhoto]);
     }
+    setImageForConfirmation(null);
   }
 
 
@@ -260,7 +262,7 @@ export default function AddItemPage() {
     <div className="flex min-h-screen flex-col">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <Link href={`/inventory/${encodeURIComponent(categoryName)}`} passHref>
-          <Button variant="outline" className="text-accent border-accent" disabled={isSaving}>
+          <Button className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground" disabled={isSaving}>
             <ArrowLeft />
             Back
           </Button>
@@ -418,5 +420,3 @@ export default function AddItemPage() {
     </div>
   );
 }
-
-    
