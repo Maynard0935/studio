@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2, Cpu, Monitor, Keyboard, Mouse, Speaker } from 'lucide-react';
-import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto } from '@/lib/constants';
+import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto, type ItemStatus } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 // Define UPS and Camera as inline SVGs
 const UpsIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -54,6 +55,7 @@ export default function AddItemPage() {
   const [endUser, setEndUser] = useState('');
   const [location, setLocation] = useState('');
   const [moreDetails, setMoreDetails] = useState('');
+  const [status, setStatus] = useState<ItemStatus | null>(null);
   const [photos, setPhotos] = useState<InventoryPhoto[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [photoToDeleteIndex, setPhotoToDeleteIndex] = useState<number | null>(null);
@@ -202,6 +204,15 @@ export default function AddItemPage() {
         });
         return;
     }
+     if (!status) {
+      toast({
+        title: "Incomplete Details",
+        description: "Please select a status (Serviceable/Unserviceable).",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
     
     setIsSaving(true);
 
@@ -215,6 +226,7 @@ export default function AddItemPage() {
         endUser,
         location,
         moreDetails,
+        status,
         photos: photos,
         createdAt: new Date().toISOString(),
         isUpdated: false,
@@ -322,6 +334,24 @@ export default function AddItemPage() {
                         rows={4}
                         disabled={isSaving}
                     />
+                </div>
+                <div>
+                    <Label className="font-semibold">Status</Label>
+                    <RadioGroup
+                        value={status ?? ""}
+                        onValueChange={(value) => setStatus(value as ItemStatus)}
+                        className="mt-2 flex gap-4"
+                        disabled={isSaving}
+                    >
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Serviceable" id="serviceable" />
+                            <Label htmlFor="serviceable">Serviceable</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Unserviceable" id="unserviceable" />
+                            <Label htmlFor="unserviceable">Unserviceable</Label>
+                        </div>
+                    </RadioGroup>
                 </div>
             </CardContent>
         </Card>

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription, CardFooter } from '@/components/ui/card';
 import { ArrowLeft, Plus, Camera, Trash2, Images, X, ChevronLeft, ChevronRight, Edit, Save } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto } from '@/lib/constants';
+import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto, type ItemStatus } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -29,6 +29,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 
 export default function InventoryPage() {
@@ -49,6 +50,7 @@ export default function InventoryPage() {
   const [editedEndUser, setEditedEndUser] = useState('');
   const [editedLocation, setEditedLocation] = useState('');
   const [editedMoreDetails, setEditedMoreDetails] = useState('');
+  const [editedStatus, setEditedStatus] = useState<ItemStatus | null>(null);
 
   const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -186,6 +188,7 @@ export default function InventoryPage() {
     setEditedEndUser(item.endUser);
     setEditedLocation(item.location);
     setEditedMoreDetails(item.moreDetails);
+    setEditedStatus(item.status);
   };
 
   const handleCancelEdit = () => {
@@ -202,6 +205,16 @@ export default function InventoryPage() {
         });
         return;
     }
+    if (!editedStatus) {
+        toast({
+          title: "Incomplete Details",
+          description: "Please select a status.",
+          variant: "destructive",
+          duration: 3000
+        });
+        return;
+    }
+
     try {
       const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
       const inventory: InventoryData = storedData ? JSON.parse(storedData) : {};
@@ -214,6 +227,7 @@ export default function InventoryPage() {
             endUser: editedEndUser,
             location: editedLocation,
             moreDetails: editedMoreDetails,
+            status: editedStatus,
             updatedAt: new Date().toISOString() 
         } : item
       );
@@ -334,26 +348,44 @@ export default function InventoryPage() {
                                 <Label htmlFor="editMoreDetails" className="font-semibold">More Details</Label>
                                 <Textarea id="editMoreDetails" value={editedMoreDetails} onChange={(e) => setEditedMoreDetails(e.target.value)} rows={4} className="mt-1" />
                             </div>
+                             <div>
+                                <Label className="font-semibold">Status</Label>
+                                <RadioGroup
+                                    value={editedStatus ?? ""}
+                                    onValueChange={(value) => setEditedStatus(value as ItemStatus)}
+                                    className="mt-2 flex gap-4"
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="Serviceable" id="edit-serviceable" />
+                                        <Label htmlFor="edit-serviceable">Serviceable</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="Unserviceable" id="edit-unserviceable" />
+                                        <Label htmlFor="edit-unserviceable">Unserviceable</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
                           </div>
                       ) : (
                         <div className="space-y-2 text-sm sm:text-base">
                           <p><strong className="font-semibold">Accountable Officer:</strong> {item.accountableOfficer}</p>
                           <p><strong className="font-semibold">End-user:</strong> {item.endUser}</p>
                           <p><strong className="font-semibold">Location:</strong> {item.location}</p>
+                           {item.status && <p><strong className="font-semibold">Status:</strong> {item.status}</p>}
                           {item.moreDetails && <p><strong className="font-semibold">More Details:</strong> <span className="whitespace-pre-wrap">{item.moreDetails}</span></p>}
                         </div>
                       )}
                       
                       {item.photos && item.photos.length > 0 && (
-                          <div className={cn("relative w-full max-w-sm mx-auto group", editingItemId !== item.id && "cursor-pointer")} onClick={() => openPreview(item.photos)}>
+                          <div className={cn("relative w-full max-w-sm mx-auto group", editingItemId !== item.id && "cursor-pointer")} onClick={() => item.photos && openPreview(item.photos)}>
                               <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
                                   <CarouselContent>
                                   {item.photos.map((photo, index) => (
                                       <CarouselItem key={index}>
                                         <div className="relative aspect-video">
-                                          {photo && photo.url && (
+                                          {photo && photo.url ? (
                                               <Image src={photo.url} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
-                                          )}
+                                          ) : null}
                                           {photo && photo.part && (
                                                 <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
                                                   {photo.part}
@@ -407,7 +439,7 @@ export default function InventoryPage() {
               {filter === 'all' && items.length === 0 ? 'Get started by adding an item to this category.' : `No items match the filter "${filter}".`}
             </p>
             {filter === 'all' && items.length === 0 && (
-                <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref className="mt-6 inline-block">
+                <Link href={`/add-item/${encodeURIComponent(categoryName)}`} passHref className="mt-6 inline-block">
                 <Button className="bg-primary hover:bg-primary/90">
                     <Plus className="mr-2 h-4 w-4" /> Add First Item
                 </Button>
@@ -419,7 +451,7 @@ export default function InventoryPage() {
 
       <footer className="w-full border-t border-border/40 mt-auto bg-background/95 backdrop-blur-sm sticky bottom-0 z-10">
         <div className="container p-4 mx-auto">
-            <Link href={`/add-item/${encodeURIComponent(category.name)}`} passHref className="w-full">
+            <Link href={`/add-item/${encodeURIComponent(categoryName)}`} passHref className="w-full">
                 <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-bold" size="lg">
                     <Plus className="mr-2 h-4 w-4" /> Add New Item
                 </Button>

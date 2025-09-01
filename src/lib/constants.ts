@@ -19,13 +19,21 @@ export type CategoryName = typeof CATEGORIES[number]['name'];
 
 export const INVENTORY_STORAGE_KEY = 'Physical_Inventory';
 
+export type ItemStatus = 'Serviceable' | 'Unserviceable';
+
+export interface InventoryPhoto {
+  url: string; // base64 data URI
+  part?: string;
+}
+
 export interface InventoryItem {
   id: string;
   accountableOfficer: string;
   endUser: string;
   location: string;
   moreDetails: string;
-  photos: string[]; // base64 data URIs
+  photos: InventoryPhoto[];
+  status: ItemStatus | null;
   createdAt: string;
   updatedAt?: string;
   isUpdated?: boolean;
