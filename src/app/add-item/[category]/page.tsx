@@ -259,17 +259,17 @@ export default function AddItemPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
-        <Link href="/categories" passHref>
-          <Button variant="ghost" size="icon" disabled={isSaving}>
+        <Link href={`/inventory/${encodeURIComponent(categoryName)}`} passHref>
+          <Button variant="outline" className="text-accent border-accent" disabled={isSaving}>
             <ArrowLeft />
-            <span className="sr-only">Back</span>
+            Back
           </Button>
         </Link>
         <div className="text-center">
           <h1 className="text-xl sm:text-2xl font-bold">Add Item</h1>
           <p className="text-muted-foreground text-sm sm:text-base">{category.name}</p>
         </div>
-        <div className="w-10"></div>
+        <div className="w-24"></div>
       </header>
       
       <main className="flex-1 p-4 md:p-6 space-y-6">

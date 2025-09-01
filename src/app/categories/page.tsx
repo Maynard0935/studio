@@ -231,9 +231,9 @@ export default function CategoriesPage() {
     <div className="flex min-h-screen flex-col items-center">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
         <Link href="/" passHref>
-          <Button variant="ghost" size="icon">
+          <Button variant="outline" className="text-accent border-accent">
             <ArrowLeft />
-            <span className="sr-only">Back</span>
+            Back
           </Button>
         </Link>
         <div className="flex items-center gap-2">
