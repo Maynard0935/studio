@@ -75,7 +75,15 @@ export default function InventoryPage() {
       const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
       if (storedData) {
         const inventory: InventoryData = JSON.parse(storedData);
-        setItems(inventory[categoryName] || []);
+        const categoryItems = inventory[categoryName] || [];
+        
+        // This is a migration step for old data that might still store photos as strings
+        const migratedItems = categoryItems.map(item => ({
+            ...item,
+            photos: item.photos.map(p => typeof p === 'string' ? { url: p } : p)
+        }));
+
+        setItems(migratedItems);
       }
     } catch (error) {
       console.error("Failed to load inventory from localStorage", error);
@@ -313,62 +321,63 @@ export default function InventoryPage() {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-0">
-                  {editingItemId === item.id ? (
-                      <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="editAccountableOfficer" className="font-semibold">Accountable Officer</Label>
-                            <Input id="editAccountableOfficer" value={editedAccountableOfficer} onChange={(e) => setEditedAccountableOfficer(e.target.value)} className="mt-1" />
-                        </div>
-                        <div>
-                            <Label htmlFor="editEndUser" className="font-semibold">End-user</Label>
-                            <Input id="editEndUser" value={editedEndUser} onChange={(e) => setEditedEndUser(e.target.value)} className="mt-1" />
-                        </div>
-                        <div>
-                            <Label htmlFor="editLocation" className="font-semibold">Location</Label>
-                            <Input id="editLocation" value={editedLocation} onChange={(e) => setEditedLocation(e.target.value)} className="mt-1" />
-                        </div>
-                        <div>
-                            <Label htmlFor="editMoreDetails" className="font-semibold">More Details</Label>
-                            <Textarea id="editMoreDetails" value={editedMoreDetails} onChange={(e) => setEditedMoreDetails(e.target.value)} rows={4} className="mt-1" />
-                        </div>
-                      </div>
-                  ) : (
-                    <div className="space-y-2 text-sm sm:text-base">
-                      <p><strong className="font-semibold">Accountable Officer:</strong> {item.accountableOfficer}</p>
-                      <p><strong className="font-semibold">End-user:</strong> {item.endUser}</p>
-                      <p><strong className="font-semibold">Location:</strong> {item.location}</p>
-                      {item.moreDetails && <p><strong className="font-semibold">More Details:</strong> <span className="whitespace-pre-wrap">{item.moreDetails}</span></p>}
-                    </div>
-                  )}
-                  {item.photos.length > 0 && (
-                      <div className={cn("relative w-full max-w-sm mx-auto group", editingItemId !== item.id && "cursor-pointer")} onClick={() => openPreview(item.photos)}>
-                          <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
-                              <CarouselContent>
-                              {item.photos.map((photo, index) => (
-                                  <CarouselItem key={index}>
-                                    <div className="relative aspect-video">
-                                      {photo.url ? (
-                                        <>
-                                          <Image src={photo.url} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
-                                          {photo.part && (
-                                            <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                                              {photo.part}
-                                            </div>
-                                          )}
-                                        </>
-                                      ) : null}
-                                    </div>
-                                  </CarouselItem>
-                              ))}
-                              </CarouselContent>
-                          </Carousel>
-                          <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs sm:text-base px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full flex items-center gap-1 sm:gap-1.5 pointer-events-none">
-                              <Images className="h-3 w-3 sm:h-4 sm:w-4" />
-                              <span>{item.photos.length}</span>
+                <CardContent className="pt-0">
+                  <div className="grid md:grid-cols-2 gap-4">
+                      {editingItemId === item.id ? (
+                          <div className="space-y-4 md:col-span-2">
+                            <div>
+                                <Label htmlFor="editAccountableOfficer" className="font-semibold">Accountable Officer</Label>
+                                <Input id="editAccountableOfficer" value={editedAccountableOfficer} onChange={(e) => setEditedAccountableOfficer(e.target.value)} className="mt-1" />
+                            </div>
+                            <div>
+                                <Label htmlFor="editEndUser" className="font-semibold">End-user</Label>
+                                <Input id="editEndUser" value={editedEndUser} onChange={(e) => setEditedEndUser(e.target.value)} className="mt-1" />
+                            </div>
+                            <div>
+                                <Label htmlFor="editLocation" className="font-semibold">Location</Label>
+                                <Input id="editLocation" value={editedLocation} onChange={(e) => setEditedLocation(e.target.value)} className="mt-1" />
+                            </div>
+                            <div>
+                                <Label htmlFor="editMoreDetails" className="font-semibold">More Details</Label>
+                                <Textarea id="editMoreDetails" value={editedMoreDetails} onChange={(e) => setEditedMoreDetails(e.target.value)} rows={4} className="mt-1" />
+                            </div>
                           </div>
-                      </div>
-                  )}
+                      ) : (
+                        <div className="space-y-2 text-sm sm:text-base">
+                          <p><strong className="font-semibold">Accountable Officer:</strong> {item.accountableOfficer}</p>
+                          <p><strong className="font-semibold">End-user:</strong> {item.endUser}</p>
+                          <p><strong className="font-semibold">Location:</strong> {item.location}</p>
+                          {item.moreDetails && <p><strong className="font-semibold">More Details:</strong> <span className="whitespace-pre-wrap">{item.moreDetails}</span></p>}
+                        </div>
+                      )}
+                      
+                      {item.photos.length > 0 && (
+                          <div className={cn("relative w-full max-w-sm mx-auto group", editingItemId !== item.id && "cursor-pointer")} onClick={() => openPreview(item.photos)}>
+                              <Carousel className="w-full" opts={{ loop: item.photos.length > 1 }}>
+                                  <CarouselContent>
+                                  {item.photos.map((photo, index) => (
+                                      <CarouselItem key={index}>
+                                        <div className="relative aspect-video">
+                                          {photo && photo.url && (
+                                              <Image src={photo.url} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                                          )}
+                                          {photo && photo.part && (
+                                                <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                                                  {photo.part}
+                                                </div>
+                                              )}
+                                        </div>
+                                      </CarouselItem>
+                                  ))}
+                                  </CarouselContent>
+                              </Carousel>
+                              <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs sm:text-base px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full flex items-center gap-1 sm:gap-1.5 pointer-events-none">
+                                  <Images className="h-3 w-3 sm:h-4 sm:w-4" />
+                                  <span>{item.photos.length}</span>
+                              </div>
+                          </div>
+                      )}
+                  </div>
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-4">
                      {editingItemId === item.id ? (
@@ -440,7 +449,7 @@ export default function InventoryPage() {
                         <CarouselContent className="h-full">
                             {selectedItemPhotos.map((photo, index) => (
                                 <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
-                                   {photo.url ? (
+                                   {photo && photo.url ? (
                                     <div 
                                         className="relative w-full h-full flex items-center justify-center"
                                         onMouseMove={handleMouseMove}
@@ -482,3 +491,5 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+    
