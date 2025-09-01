@@ -1,23 +1,21 @@
 {
   "name": "Physical Inventory App",
-  "short_name": "Inventory App",
+  "short_name": "Inventory",
+  "description": "A simple and efficient way to track your physical assets.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a092d",
+  "theme_color": "#facc15",
   "icons": [
     {
       "src": "/inventory_app_icon.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/inventory_app_icon.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
-  ],
-  "theme_color": "#0c0a24",
-  "background_color": "#0c0a24",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }
