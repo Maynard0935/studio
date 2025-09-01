@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription, CardFooter } from '@/components/ui/card';
 import { ArrowLeft, Plus, Camera, Trash2, Images, X, ChevronLeft, ChevronRight, Edit, Save } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem } from '@/lib/constants';
+import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -40,7 +40,7 @@ export default function InventoryPage() {
 
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [filter, setFilter] = useState('all');
-  const [selectedItemPhotos, setSelectedItemPhotos] = useState<string[] | null>(null);
+  const [selectedItemPhotos, setSelectedItemPhotos] = useState<InventoryPhoto[] | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const [transform, setTransform] = useState({ x: 0, y: 0 });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
@@ -88,7 +88,7 @@ export default function InventoryPage() {
     }
   }, [category, categoryName, router, toast]);
   
-  const openPreview = (photos: string[]) => {
+  const openPreview = (photos: InventoryPhoto[]) => {
     if (editingItemId) return;
     setSelectedItemPhotos(photos);
     setIsZoomed(false);
@@ -347,9 +347,18 @@ export default function InventoryPage() {
                               <CarouselContent>
                               {item.photos.map((photo, index) => (
                                   <CarouselItem key={index}>
-                                      <div className="relative aspect-video">
-                                          <Image src={photo} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
-                                      </div>
+                                    <div className="relative aspect-video">
+                                      {photo.url ? (
+                                        <>
+                                          <Image src={photo.url} alt={`Inventory item ${index + 1}`} fill className="object-cover rounded-md" />
+                                          {photo.part && (
+                                            <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
+                                              {photo.part}
+                                            </div>
+                                          )}
+                                        </>
+                                      ) : null}
+                                    </div>
                                   </CarouselItem>
                               ))}
                               </CarouselContent>
@@ -431,12 +440,13 @@ export default function InventoryPage() {
                         <CarouselContent className="h-full">
                             {selectedItemPhotos.map((photo, index) => (
                                 <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
+                                   {photo.url ? (
                                     <div 
                                         className="relative w-full h-full flex items-center justify-center"
                                         onMouseMove={handleMouseMove}
                                     >
                                         <Image
-                                            src={photo}
+                                            src={photo.url}
                                             alt={`Enlarged inventory item ${index + 1}`}
                                             width={2000}
                                             height={2000}
@@ -451,6 +461,7 @@ export default function InventoryPage() {
                                             }}
                                         />
                                     </div>
+                                   ) : null}
                                 </CarouselItem>
                             ))}
                         </CarouselContent>
@@ -471,7 +482,3 @@ export default function InventoryPage() {
     </div>
   );
 }
-
-    
-
-    
