@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: 'Physical Inventory App',
   description: 'Physical Inventory App',
-  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({
