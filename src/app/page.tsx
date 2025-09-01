@@ -19,7 +19,7 @@ export default function Home() {
       </main>
       <footer className="w-full border-t border-border/40">
         <div className="container mx-auto flex items-center justify-center py-4">
-            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} SPMS Physical Inventory App. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Physical Inventory App. All rights reserved.</p>
         </div>
       </footer>
     </div>
