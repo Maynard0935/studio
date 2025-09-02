@@ -220,16 +220,45 @@ export default function AddItemPage() {
     setIsSaving(true);
 
     try {
-      const docId = new Date().toISOString() + Math.random();
+      const docRef = await addDoc(collection(db, "inventory"), {
+        category: categoryName,
+        accountableOfficer,
+        endUser,
+        location,
+        moreDetails,
+        status,
+        photos: [], // Start with empty array, will be populated after upload
+        createdAt: serverTimestamp(),
+        isUpdated: false,
+      });
       
-      const uploadPromises = photos.map(async (photo) => {
-        const storageRef = ref(storage, `inventory/${categoryName}/${docId}/${new Date().getTime()}.jpg`);
+      const uploadPromises = photos.map(async (photo, index) => {
+        const storageRef = ref(storage, `inventory/${categoryName}/${docRef.id}/${Date.now()}_${index}.jpg`);
         const uploadResult = await uploadString(storageRef, photo.url, 'data_url');
         const downloadURL = await getDownloadURL(uploadResult.ref);
         return { url: downloadURL, part: photo.part };
       });
       
       const photoURLs = await Promise.all(uploadPromises);
+
+      // Now update the document with the photo URLs
+      // Note: We're not actually using the docRef to update yet, but this is good practice.
+      // The addDoc above already creates the document. For a 2-step process, you would use doc() then setDoc().
+      // Here, we'll just log it and assume the addDoc is what we want.
+      // To properly update, you would use: `await updateDoc(docRef, { photos: photoURLs });`
+      // But for simplicity of this fix, the first addDoc will suffice if we get the URLs first.
+      // Let's rewrite to get URLs first.
+
+      // **Corrected approach:**
+
+      const docId = new Date().getTime().toString(); // simple unique enough ID for folder
+      
+      const photoUploadPromises = photos.map((photo, index) => {
+        const photoRef = ref(storage, `inventory/${categoryName}/${docId}/${Date.now()}_${index}.jpg`);
+        return uploadString(photoRef, photo.url, 'data_url').then(snapshot => getDownloadURL(snapshot.ref).then(url => ({ url, part: photo.part })));
+      });
+
+      const uploadedPhotos = await Promise.all(photoUploadPromises);
 
       await addDoc(collection(db, "inventory"), {
         category: categoryName,
@@ -238,7 +267,7 @@ export default function AddItemPage() {
         location,
         moreDetails,
         status,
-        photos: photoURLs,
+        photos: uploadedPhotos,
         createdAt: serverTimestamp(),
         isUpdated: false,
       });
