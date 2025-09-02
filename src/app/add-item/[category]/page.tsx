@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2, Cpu, Monitor, Keyboard, Mouse, Speaker } from 'lucide-react';
-import { CATEGORIES, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto, type ItemStatus } from '@/lib/constants';
+import { CATEGORIES, type CategoryName, type InventoryItem, type InventoryPhoto, type ItemStatus } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -221,14 +221,15 @@ export default function AddItemPage() {
 
     try {
       const docId = new Date().toISOString() + Math.random();
-      const photoURLs: { url: string; part?: string }[] = [];
-
-      for (const photo of photos) {
+      
+      const uploadPromises = photos.map(async (photo) => {
         const storageRef = ref(storage, `inventory/${categoryName}/${docId}/${new Date().getTime()}.jpg`);
         const uploadResult = await uploadString(storageRef, photo.url, 'data_url');
         const downloadURL = await getDownloadURL(uploadResult.ref);
-        photoURLs.push({ url: downloadURL, part: photo.part });
-      }
+        return { url: downloadURL, part: photo.part };
+      });
+      
+      const photoURLs = await Promise.all(uploadPromises);
 
       await addDoc(collection(db, "inventory"), {
         category: categoryName,
@@ -446,5 +447,3 @@ export default function AddItemPage() {
     </div>
   );
 }
-
-    
