@@ -35,8 +35,8 @@ export interface InventoryItem {
   moreDetails: string;
   photos: InventoryPhoto[];
   status: ItemStatus | null;
-  createdAt: Timestamp; // Changed from string to Timestamp
-  updatedAt?: Timestamp; // Changed from string to Timestamp
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
   isUpdated?: boolean;
   category: CategoryName;
 }
