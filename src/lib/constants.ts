@@ -1,4 +1,5 @@
 import { type LucideIcon, Mountain, Building, Printer, Sofa, Laptop, Construction, FlaskConical, Sailboat, Car, FileCode, Dumbbell, Router } from 'lucide-react';
+import { Timestamp } from 'firebase/firestore';
 
 export const CATEGORIES = [
   { name: 'LAND', icon: Mountain },
@@ -22,7 +23,7 @@ export const INVENTORY_STORAGE_KEY = 'Physical_Inventory';
 export type ItemStatus = 'Serviceable' | 'Unserviceable';
 
 export interface InventoryPhoto {
-  url: string; // base64 data URI
+  url: string; 
   part?: string;
 }
 
@@ -34,11 +35,14 @@ export interface InventoryItem {
   moreDetails: string;
   photos: InventoryPhoto[];
   status: ItemStatus | null;
-  createdAt: string;
-  updatedAt?: string;
+  createdAt: Timestamp; // Changed from string to Timestamp
+  updatedAt?: Timestamp; // Changed from string to Timestamp
   isUpdated?: boolean;
+  category: CategoryName;
 }
 
 export type InventoryData = {
   [key in CategoryName]?: InventoryItem[];
 };
+
+    

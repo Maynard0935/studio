@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2, Cpu, Monitor, Keyboard, Mouse, Speaker } from 'lucide-react';
-import { CATEGORIES, INVENTORY_STORAGE_KEY, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto, type ItemStatus } from '@/lib/constants';
+import { CATEGORIES, type CategoryName, type InventoryData, type InventoryItem, type InventoryPhoto, type ItemStatus } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { db, storage } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 
 // Define UPS and Camera as inline SVGs
 const UpsIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -96,7 +99,7 @@ export default function AddItemPage() {
     }
   };
 
-  const compressImage = (dataUrl: string, maxSize = 1024): Promise<string> => {
+  const compressImage = (dataUrl: string, maxSize = 800): Promise<string> => {
     return new Promise((resolve, reject) => {
         const img = document.createElement('img');
         img.onload = () => {
@@ -121,7 +124,7 @@ export default function AddItemPage() {
                 return reject(new Error('Failed to get canvas context'));
             }
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.8));
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
         };
         img.onerror = (error) => {
             console.error("Image load error", error);
@@ -217,26 +220,27 @@ export default function AddItemPage() {
     setIsSaving(true);
 
     try {
-      const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
-      const inventory: InventoryData = storedData ? JSON.parse(storedData) : {};
+      const docId = new Date().toISOString() + Math.random();
+      const photoURLs: { url: string; part?: string }[] = [];
 
-      const newItem: InventoryItem = {
-        id: new Date().toISOString() + Math.random(),
+      for (const photo of photos) {
+        const storageRef = ref(storage, `inventory/${categoryName}/${docId}/${new Date().getTime()}.jpg`);
+        const uploadResult = await uploadString(storageRef, photo.url, 'data_url');
+        const downloadURL = await getDownloadURL(uploadResult.ref);
+        photoURLs.push({ url: downloadURL, part: photo.part });
+      }
+
+      await addDoc(collection(db, "inventory"), {
+        category: categoryName,
         accountableOfficer,
         endUser,
         location,
         moreDetails,
         status,
-        photos: photos,
-        createdAt: new Date().toISOString(),
+        photos: photoURLs,
+        createdAt: serverTimestamp(),
         isUpdated: false,
-      };
-      
-      const categoryItems = inventory[categoryName] || [];
-      categoryItems.unshift(newItem);
-      inventory[categoryName] = categoryItems;
-
-      localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(inventory));
+      });
       
       toast({
         title: "Item Saved!",
@@ -247,21 +251,12 @@ export default function AddItemPage() {
       router.push(`/inventory/${encodeURIComponent(categoryName)}`);
     } catch (error) {
       console.error("Failed to save item", error);
-      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-         toast({
-            title: "Storage Full",
-            description: "Cannot save item. Your device storage for this app is full.",
-            variant: "destructive",
-            duration: 3000,
-        });
-      } else {
-        toast({
-            title: "Save Failed",
-            description: "There was an error saving your item. Please try again.",
-            variant: "destructive",
-            duration: 3000,
-        });
-      }
+      toast({
+          title: "Save Failed",
+          description: "There was an error saving your item. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+      });
     } finally {
       setIsSaving(false);
     }
@@ -451,3 +446,5 @@ export default function AddItemPage() {
     </div>
   );
 }
+
+    
