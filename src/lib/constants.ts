@@ -1,5 +1,5 @@
 import { type LucideIcon, Mountain, Building, Printer, Sofa, Laptop, Construction, FlaskConical, Sailboat, Car, FileCode, Dumbbell, Router } from 'lucide-react';
-import { Timestamp } from 'firebase/firestore';
+import { type Timestamp } from 'firebase/firestore';
 
 export const CATEGORIES = [
   { name: 'LAND', icon: Mountain },
