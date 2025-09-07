@@ -2,7 +2,7 @@
 "use client";
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState, useEffect, MouseEvent } from 'react';
+import { useState, useEffect, MouseEvent, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -66,6 +66,40 @@ export default function InventoryPage() {
     return date.toLocaleString(undefined, dateTimeFormatOptions);
   };
 
+  const fetchItems = useCallback(async () => {
+    if (!category) return;
+    
+    setIsLoading(true);
+    try {
+        const q = query(
+            collection(db, "inventory"), 
+            where("category", "==", categoryName),
+            orderBy("createdAt", "desc")
+        );
+
+        const querySnapshot = await getDocs(q);
+        const fetchedItems = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                createdAt: data.createdAt,
+                updatedAt: data.updatedAt,
+            } as InventoryItem;
+        });
+        setItems(fetchedItems);
+    } catch (error) {
+        console.error("Failed to load inventory from Firestore", error);
+        toast({
+            title: "Load Failed",
+            description: "There was an error loading your inventory.",
+            variant: "destructive",
+            duration: 3000,
+        });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [category, categoryName, toast]);
 
   useEffect(() => {
     if (!category) {
@@ -79,41 +113,8 @@ export default function InventoryPage() {
         return;
     }
 
-    const fetchItems = async () => {
-        setIsLoading(true);
-        try {
-            const q = query(
-                collection(db, "inventory"), 
-                where("category", "==", categoryName),
-                orderBy("createdAt", "desc")
-            );
-
-            const querySnapshot = await getDocs(q);
-            const fetchedItems = querySnapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    createdAt: data.createdAt,
-                    updatedAt: data.updatedAt,
-                } as InventoryItem;
-            });
-            setItems(fetchedItems);
-        } catch (error) {
-            console.error("Failed to load inventory from Firestore", error);
-            toast({
-                title: "Load Failed",
-                description: "There was an error loading your inventory.",
-                variant: "destructive",
-                duration: 3000,
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     fetchItems();
-  }, [category, categoryName, router, toast]);
+  }, [category, router, toast, fetchItems]);
   
   const openPreview = (photos: InventoryPhoto[]) => {
     if (editingItemId) return;
