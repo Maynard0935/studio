@@ -124,6 +124,12 @@ export default function AddItemPage() {
         };
         img.onerror = (error) => {
             console.error("Image load error", error);
+            toast({
+              title: "Image Load Error",
+              description: "Could not load the image for processing. It might be corrupted or in an unsupported format.",
+              variant: "destructive",
+              duration: 5000,
+            });
             reject(new Error('Failed to load image for compression.'));
         };
         img.src = dataUrl;
@@ -151,11 +157,6 @@ export default function AddItemPage() {
             variant: "destructive",
             duration: 3000,
         });
-        const newPhoto: InventoryPhoto = { url: imageData };
-         if (part) {
-            newPhoto.part = part;
-        }
-        setPhotos((prev) => [...prev, newPhoto]);
     }
     setImageForConfirmation(null);
   }
