@@ -95,7 +95,7 @@ export default function AddItemPage() {
     }
   };
 
-  const compressImage = (dataUrl: string, maxSize = 800): Promise<string> => {
+  const compressImage = (dataUrl: string, maxSize = 1200): Promise<string> => {
     return new Promise((resolve, reject) => {
         const img = document.createElement('img');
         img.onload = () => {
@@ -120,7 +120,7 @@ export default function AddItemPage() {
                 return reject(new Error('Failed to get canvas context'));
             }
             ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
+            resolve(canvas.toDataURL('image/jpeg', 0.9));
         };
         img.onerror = (error) => {
             console.error("Image load error", error);
