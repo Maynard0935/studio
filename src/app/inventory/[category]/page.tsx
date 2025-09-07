@@ -28,7 +28,6 @@ import { cn } from '@/lib/utils';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, doc, deleteDoc, updateDoc, serverTimestamp, orderBy, Timestamp } from 'firebase/firestore';
@@ -49,9 +48,6 @@ export default function InventoryPage() {
   const [transform, setTransform] = useState({ x: 0, y: 0 });
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   
-  const [editedAccountableOfficer, setEditedAccountableOfficer] = useState('');
-  const [editedEndUser, setEditedEndUser] = useState('');
-  const [editedLocation, setEditedLocation] = useState('');
   const [editedMoreDetails, setEditedMoreDetails] = useState('');
   const [editedStatus, setEditedStatus] = useState<ItemStatus | null>(null);
 
@@ -194,9 +190,6 @@ export default function InventoryPage() {
 
   const handleEdit = (item: InventoryItem) => {
     setEditingItemId(item.id);
-    setEditedAccountableOfficer(item.accountableOfficer);
-    setEditedEndUser(item.endUser);
-    setEditedLocation(item.location);
     setEditedMoreDetails(item.moreDetails);
     setEditedStatus(item.status);
   };
@@ -206,10 +199,10 @@ export default function InventoryPage() {
   };
 
   const handleSaveEdit = async (itemId: string) => {
-    if (!editedAccountableOfficer.trim()) {
+    if (!editedMoreDetails.trim()) {
         toast({
           title: "Incomplete Details",
-          description: "Accountable Officer cannot be empty.",
+          description: "Details cannot be empty.",
           variant: "destructive",
           duration: 3000
         });
@@ -228,9 +221,6 @@ export default function InventoryPage() {
     try {
         const itemRef = doc(db, "inventory", itemId);
         const updatedData = {
-            accountableOfficer: editedAccountableOfficer,
-            endUser: editedEndUser,
-            location: editedLocation,
             moreDetails: editedMoreDetails,
             status: editedStatus,
             updatedAt: serverTimestamp() 
@@ -241,9 +231,6 @@ export default function InventoryPage() {
         setItems(prevItems => prevItems.map(item => 
             item.id === itemId ? { 
                 ...item, 
-                accountableOfficer: editedAccountableOfficer,
-                endUser: editedEndUser,
-                location: editedLocation,
                 moreDetails: editedMoreDetails,
                 status: editedStatus,
                 updatedAt: now as any // Temporary client-side update
@@ -352,18 +339,6 @@ export default function InventoryPage() {
                       {editingItemId === item.id ? (
                           <div className="space-y-4 md:col-span-2">
                             <div>
-                                <Label htmlFor="editAccountableOfficer" className="font-semibold">Accountable Officer</Label>
-                                <Input id="editAccountableOfficer" value={editedAccountableOfficer} onChange={(e) => setEditedAccountableOfficer(e.target.value)} className="mt-1" />
-                            </div>
-                            <div>
-                                <Label htmlFor="editEndUser" className="font-semibold">End-user</Label>
-                                <Input id="editEndUser" value={editedEndUser} onChange={(e) => setEditedEndUser(e.target.value)} className="mt-1" />
-                            </div>
-                            <div>
-                                <Label htmlFor="editLocation" className="font-semibold">Location</Label>
-                                <Input id="editLocation" value={editedLocation} onChange={(e) => setEditedLocation(e.target.value)} className="mt-1" />
-                            </div>
-                            <div>
                                 <Label htmlFor="editMoreDetails" className="font-semibold">More Details</Label>
                                 <Textarea id="editMoreDetails" value={editedMoreDetails} onChange={(e) => setEditedMoreDetails(e.target.value)} rows={4} className="mt-1" />
                             </div>
@@ -387,11 +362,8 @@ export default function InventoryPage() {
                           </div>
                       ) : (
                         <div className="space-y-2 text-sm sm:text-base">
-                          <p><strong className="font-semibold">Accountable Officer:</strong> {item.accountableOfficer}</p>
-                          <p><strong className="font-semibold">End-user:</strong> {item.endUser}</p>
-                          <p><strong className="font-semibold">Location:</strong> {item.location}</p>
-                           {item.status && <p><strong className="font-semibold">Status:</strong> {item.status}</p>}
-                          {item.moreDetails && <p><strong className="font-semibold">More Details:</strong> <span className="whitespace-pre-wrap">{item.moreDetails}</span></p>}
+                          {item.status && <p><strong className="font-semibold">Status:</strong> {item.status}</p>}
+                          {item.moreDetails && <p><strong className="font-semibold">Details:</strong> <span className="whitespace-pre-wrap">{item.moreDetails}</span></p>}
                         </div>
                       )}
                       

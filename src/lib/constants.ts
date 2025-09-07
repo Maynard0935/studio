@@ -27,9 +27,6 @@ export interface InventoryPhoto {
 
 export interface InventoryItem {
   id: string;
-  accountableOfficer: string;
-  endUser: string;
-  location: string;
   moreDetails: string;
   photos: InventoryPhoto[];
   status: ItemStatus | null;

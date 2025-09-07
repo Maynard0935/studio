@@ -142,7 +142,7 @@ export default function CategoriesPage() {
             const itemFolder = categoryFolder.folder(itemFolderName);
 
             if (itemFolder) {
-              const descriptionText = `Accountable Officer: ${item.accountableOfficer}\nEnd-user: ${item.endUser}\nLocation: ${item.location}\nMore Details: ${item.moreDetails}\nStatus: ${item.status}`;
+              const descriptionText = `More Details: ${item.moreDetails}\nStatus: ${item.status}`;
               itemFolder.file("description.txt", descriptionText);
 
               if (item.photos && item.photos.length > 0) {
@@ -264,4 +264,3 @@ export default function CategoriesPage() {
     </div>
   );
 }
-

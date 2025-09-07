@@ -23,7 +23,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
@@ -54,9 +53,6 @@ export default function AddItemPage() {
   const categoryName = decodeURIComponent(params.category as string) as CategoryName;
   const category = CATEGORIES.find(c => c.name === categoryName);
 
-  const [accountableOfficer, setAccountableOfficer] = useState('');
-  const [endUser, setEndUser] = useState('');
-  const [location, setLocation] = useState('');
   const [moreDetails, setMoreDetails] = useState('');
   const [status, setStatus] = useState<ItemStatus | null>(null);
   const [photos, setPhotos] = useState<InventoryPhoto[]>([]);
@@ -198,10 +194,10 @@ export default function AddItemPage() {
       });
       return;
     }
-    if (!accountableOfficer.trim()) {
+    if (!moreDetails.trim()) {
         toast({
           title: "Incomplete Details",
-          description: "Please fill out the Accountable Officer field.",
+          description: "Please fill out the Details field.",
           variant: "destructive",
           duration: 3000,
         });
@@ -237,9 +233,6 @@ export default function AddItemPage() {
       await setDoc(newDocRef, {
         id: newDocRef.id,
         category: categoryName,
-        accountableOfficer: accountableOfficer || '',
-        endUser: endUser || '',
-        location: location || '',
         moreDetails: moreDetails || '',
         status: status || null,
         photos: uploadedPhotos,
@@ -291,47 +284,14 @@ export default function AddItemPage() {
         <Card>
             <CardContent className="p-4 space-y-4">
                 <div>
-                    <Label htmlFor="accountableOfficer" className="font-semibold">Accountable Officer</Label>
-                    <Input
-                        id="accountableOfficer"
-                        value={accountableOfficer}
-                        onChange={(e) => setAccountableOfficer(e.target.value)}
-                        placeholder="Enter name of accountable officer"
-                        className="mt-2"
-                        disabled={isSaving}
-                    />
-                </div>
-                <div>
-                    <Label htmlFor="endUser" className="font-semibold">End-user</Label>
-                    <Input
-                        id="endUser"
-                        value={endUser}
-                        onChange={(e) => setEndUser(e.target.value)}
-                        placeholder="Enter name of end-user"
-                        className="mt-2"
-                        disabled={isSaving}
-                    />
-                </div>
-                <div>
-                    <Label htmlFor="location" className="font-semibold">Location</Label>
-                    <Input
-                        id="location"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder="Enter location of the item"
-                        className="mt-2"
-                        disabled={isSaving}
-                    />
-                </div>
-                <div>
                     <Label htmlFor="moreDetails" className="font-semibold">More Details</Label>
                     <Textarea
                         id="moreDetails"
                         value={moreDetails}
                         onChange={(e) => setMoreDetails(e.target.value)}
-                        placeholder={`Enter any other details for the item in ${category.name}...`}
+                        placeholder={`Enter all details for the item in ${category.name} here... (e.g., accountable officer, end-user, location, etc.)`}
                         className="mt-2"
-                        rows={4}
+                        rows={6}
                         disabled={isSaving}
                     />
                 </div>
