@@ -22,7 +22,7 @@ import {
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
 
 export default function CategoriesPage() {
     const router = useRouter();
@@ -32,6 +32,7 @@ export default function CategoriesPage() {
   );
   const [showExportConfirm, setShowExportConfirm] = useState(false);
   const [showZipConfirm, setShowZipConfirm] = useState(false);
+  const [showImportConfirm, setShowImportConfirm] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,6 +107,64 @@ export default function CategoriesPage() {
         duration: 3000,
       });
     }
+  };
+
+  const handleImportRequest = () => {
+    setShowImportConfirm(false);
+    fileInputRef.current?.click();
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const text = e.target?.result;
+            if (typeof text !== 'string') {
+                throw new Error("File could not be read.");
+            }
+            const data = JSON.parse(text) as InventoryItem[];
+
+            if (!Array.isArray(data)) {
+                 throw new Error("Invalid JSON format. Expected an array of items.");
+            }
+            
+            toast({ title: "Importing...", description: "Please wait while we import your data." });
+
+            const batch = writeBatch(db);
+            data.forEach((item) => {
+                const docRef = doc(db, "inventory", item.id);
+                // Firestore handles timestamp conversion automatically if they are in correct ISO string format
+                const sanitizedItem = {
+                    ...item,
+                    createdAt: item.createdAt, // Keep as is, let Firestore convert
+                    updatedAt: item.updatedAt ? item.updatedAt : undefined
+                };
+                batch.set(docRef, sanitizedItem);
+            });
+            
+            await batch.commit();
+
+            toast({ title: "Import Successful", description: `${data.length} items have been imported.` });
+            fetchInventoryCounts(); // Refresh counts
+        } catch (error) {
+            console.error("Import failed", error);
+            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+            toast({
+                title: "Import Failed",
+                description: `An error occurred during import: ${errorMessage}`,
+                variant: "destructive",
+                duration: 5000,
+            });
+        } finally {
+             if(event.target) {
+                event.target.value = "";
+            }
+        }
+    };
+    reader.readAsText(file);
   };
   
   const downloadAllAsZip = async () => {
@@ -183,6 +242,10 @@ export default function CategoriesPage() {
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
         <div className="flex items-center gap-2">
+            <Button size="sm" onClick={() => setShowImportConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
+                <Download className="sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Import</span>
+            </Button>
             <Button size="sm" onClick={() => setShowExportConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
                 <Upload className="sm:mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">Export</span>
@@ -191,6 +254,13 @@ export default function CategoriesPage() {
                 <FileArchive className="sm:mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">Zip</span>
             </Button>
+             <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept=".json"
+                onChange={handleImport}
+            />
         </div>
       </header>
 
@@ -232,6 +302,21 @@ export default function CategoriesPage() {
         </div>
       </footer>
 
+      <AlertDialog open={showImportConfirm} onOpenChange={setShowImportConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Import</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will import items from a JSON file. The data must match the required format. This can overwrite existing items if the IDs match. Do you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleImportRequest}>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AlertDialog open={showExportConfirm} onOpenChange={setShowExportConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -264,3 +349,5 @@ export default function CategoriesPage() {
     </div>
   );
 }
+
+    
