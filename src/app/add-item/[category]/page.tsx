@@ -228,7 +228,7 @@ export default function AddItemPage() {
         const storageRef = ref(storage, `inventory/${categoryName}/${newDocRef.id}/${Date.now()}_${index}.jpg`);
         const uploadResult = await uploadString(storageRef, photo.url, 'data_url');
         const downloadURL = await getDownloadURL(uploadResult.ref);
-        return { url: downloadURL, part: photo.part };
+        return { url: downloadURL, part: photo.part || '' };
       });
       
       const uploadedPhotos = await Promise.all(uploadPromises);
@@ -237,11 +237,11 @@ export default function AddItemPage() {
       await setDoc(newDocRef, {
         id: newDocRef.id,
         category: categoryName,
-        accountableOfficer,
-        endUser,
-        location,
-        moreDetails,
-        status,
+        accountableOfficer: accountableOfficer || '',
+        endUser: endUser || '',
+        location: location || '',
+        moreDetails: moreDetails || '',
+        status: status || null,
         photos: uploadedPhotos,
         createdAt: serverTimestamp(),
         isUpdated: false,
