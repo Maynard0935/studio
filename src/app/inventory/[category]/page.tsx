@@ -228,22 +228,16 @@ export default function InventoryPage() {
         };
         await updateDoc(itemRef, updatedData);
 
-        const now = new Date();
-        setItems(prevItems => prevItems.map(item => 
-            item.id === itemId ? { 
-                ...item, 
-                moreDetails: editedMoreDetails,
-                status: editedStatus,
-                updatedAt: now as any // Temporary client-side update
-            } : item
-        ));
+        // We fetch again to get the server-generated timestamp
+        fetchItems(); 
+        
         setEditingItemId(null);
       
-      toast({
-        title: "Item Updated",
-        description: `The item details have been saved.`,
-        duration: 3000,
-      });
+        toast({
+            title: "Item Updated",
+            description: `The item details have been saved.`,
+            duration: 3000,
+        });
     } catch (error) {
       console.error("Failed to update item", error);
       toast({
