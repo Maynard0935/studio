@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Plus, Upload, Download, FileArchive } from 'lucide-react';
+import { ArrowLeft, Plus, FileArchive } from 'lucide-react';
 import { CATEGORIES, type CategoryName, type InventoryItem } from '@/lib/constants';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,7 +22,7 @@ import {
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, writeBatch, doc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 
 export default function CategoriesPage() {
     const router = useRouter();
@@ -30,11 +30,7 @@ export default function CategoriesPage() {
     const [inventoryCounts, setInventoryCounts] = useState<Record<CategoryName, number>>(() =>
     Object.fromEntries(CATEGORIES.map(c => [c.name, 0])) as Record<CategoryName, number>
   );
-  const [showExportConfirm, setShowExportConfirm] = useState(false);
   const [showZipConfirm, setShowZipConfirm] = useState(false);
-  const [showImportConfirm, setShowImportConfirm] = useState(false);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchInventoryCounts = useCallback(async () => {
     try {
@@ -65,108 +61,6 @@ export default function CategoriesPage() {
     fetchInventoryCounts();
   }, [fetchInventoryCounts]);
 
-  const handleExport = async () => {
-    setShowExportConfirm(false);
-    toast({ title: "Exporting...", description: "Your download will begin shortly." });
-    try {
-      const querySnapshot = await getDocs(collection(db, "inventory"));
-      if(querySnapshot.empty) {
-         toast({
-          title: "No Data to Export",
-          description: "Your inventory is empty.",
-          variant: "destructive",
-          duration: 3000,
-        });
-        return;
-      }
-      
-      const inventoryData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      const blob = new Blob([JSON.stringify(inventoryData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'Physical_Inventory_Firestore.json';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast({
-        title: "Export Successful",
-        description: "Your inventory data has been downloaded.",
-        duration: 3000,
-      });
-
-    } catch (error) {
-      console.error("Export failed", error);
-      toast({
-        title: "Export Failed",
-        description: "An error occurred while exporting your data.",
-        variant: "destructive",
-        duration: 3000,
-      });
-    }
-  };
-
-  const handleImportRequest = () => {
-    setShowImportConfirm(false);
-    fileInputRef.current?.click();
-  };
-
-  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const text = e.target?.result;
-            if (typeof text !== 'string') {
-                throw new Error("File could not be read.");
-            }
-            const data = JSON.parse(text) as InventoryItem[];
-
-            if (!Array.isArray(data)) {
-                 throw new Error("Invalid JSON format. Expected an array of items.");
-            }
-            
-            toast({ title: "Importing...", description: "Please wait while we import your data." });
-
-            const batch = writeBatch(db);
-            data.forEach((item) => {
-                const docRef = doc(db, "inventory", item.id);
-                // Firestore handles timestamp conversion automatically if they are in correct ISO string format
-                const sanitizedItem = {
-                    ...item,
-                    createdAt: item.createdAt, // Keep as is, let Firestore convert
-                    updatedAt: item.updatedAt ? item.updatedAt : undefined
-                };
-                batch.set(docRef, sanitizedItem);
-            });
-            
-            await batch.commit();
-
-            toast({ title: "Import Successful", description: `${data.length} items have been imported.` });
-            fetchInventoryCounts(); // Refresh counts
-        } catch (error) {
-            console.error("Import failed", error);
-            const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-            toast({
-                title: "Import Failed",
-                description: `An error occurred during import: ${errorMessage}`,
-                variant: "destructive",
-                duration: 5000,
-            });
-        } finally {
-             if(event.target) {
-                event.target.value = "";
-            }
-        }
-    };
-    reader.readAsText(file);
-  };
-  
   const downloadAllAsZip = async () => {
     setShowZipConfirm(false);
     toast({ title: "Zipping...", description: "Your download will begin shortly." });
@@ -188,7 +82,7 @@ export default function CategoriesPage() {
           if(!inventoryByCategory[category]) {
               inventoryByCategory[category] = [];
           }
-          inventoryByCategory[category].push(item);
+          inventoryByCategory[category].push({ id: doc.id, ...item });
       });
 
       for (const categoryName in inventoryByCategory) {
@@ -242,25 +136,10 @@ export default function CategoriesPage() {
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
         <div className="flex items-center gap-2">
-            <Button size="sm" onClick={() => setShowImportConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
-                <Download className="sm:mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Import</span>
-            </Button>
-            <Button size="sm" onClick={() => setShowExportConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
-                <Upload className="sm:mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Export</span>
-            </Button>
              <Button size="sm" onClick={() => setShowZipConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
                 <FileArchive className="sm:mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">Zip</span>
             </Button>
-             <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept=".json"
-                onChange={handleImport}
-            />
         </div>
       </header>
 
@@ -302,36 +181,6 @@ export default function CategoriesPage() {
         </div>
       </footer>
 
-      <AlertDialog open={showImportConfirm} onOpenChange={setShowImportConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Import</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will import items from a JSON file. The data must match the required format. This can overwrite existing items if the IDs match. Do you want to continue?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleImportRequest}>Continue</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={showExportConfirm} onOpenChange={setShowExportConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Export</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will download a JSON file of your entire inventory from Firestore. Do you want to continue?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleExport}>Continue</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <AlertDialog open={showZipConfirm} onOpenChange={setShowZipConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -349,5 +198,3 @@ export default function CategoriesPage() {
     </div>
   );
 }
-
-    
