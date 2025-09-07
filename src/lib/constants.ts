@@ -18,8 +18,6 @@ export const CATEGORIES = [
 
 export type CategoryName = typeof CATEGORIES[number]['name'];
 
-export const INVENTORY_STORAGE_KEY = 'Physical_Inventory';
-
 export type ItemStatus = 'Serviceable' | 'Unserviceable';
 
 export interface InventoryPhoto {
@@ -44,5 +42,3 @@ export interface InventoryItem {
 export type InventoryData = {
   [key in CategoryName]?: InventoryItem[];
 };
-
-    

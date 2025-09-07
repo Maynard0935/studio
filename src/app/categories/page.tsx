@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Plus, Upload, Download, FileArchive } from 'lucide-react';
-import { CATEGORIES, type CategoryName, INVENTORY_STORAGE_KEY, type InventoryData, type InventoryItem } from '@/lib/constants';
-import { useEffect, useState, useRef } from 'react';
+import { CATEGORIES, type CategoryName, type InventoryItem } from '@/lib/constants';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -18,9 +18,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 export default function CategoriesPage() {
     const router = useRouter();
@@ -28,33 +30,47 @@ export default function CategoriesPage() {
     const [inventoryCounts, setInventoryCounts] = useState<Record<CategoryName, number>>(() =>
     Object.fromEntries(CATEGORIES.map(c => [c.name, 0])) as Record<CategoryName, number>
   );
-  const [importData, setImportData] = useState<string | null>(null);
   const [showExportConfirm, setShowExportConfirm] = useState(false);
   const [showZipConfirm, setShowZipConfirm] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  const fetchInventoryCounts = useCallback(async () => {
     try {
-      const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
-      if (storedData) {
-        const inventory: InventoryData = JSON.parse(storedData);
+        const inventoryRef = collection(db, "inventory");
+        const querySnapshot = await getDocs(inventoryRef);
         const counts = Object.fromEntries(
-          CATEGORIES.map(c => [c.name, inventory[c.name]?.length ?? 0])
+            CATEGORIES.map(c => [c.name, 0])
         ) as Record<CategoryName, number>;
-        setInventoryCounts(counts);
-      }
-    } catch (error) {
-      console.error("Failed to load inventory from localStorage", error);
-    }
-  }, []);
 
-  const handleExport = () => {
-    setShowExportConfirm(false);
-    try {
-      const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
-      if (!storedData || storedData === '{}') {
+        querySnapshot.forEach((doc) => {
+            const item = doc.data() as InventoryItem;
+            if (item.category && counts.hasOwnProperty(item.category)) {
+                counts[item.category]++;
+            }
+        });
+        setInventoryCounts(counts);
+    } catch (error) {
+        console.error("Failed to load inventory counts from Firestore", error);
         toast({
+            title: "Error",
+            description: "Could not load inventory counts.",
+            variant: "destructive",
+        });
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchInventoryCounts();
+  }, [fetchInventoryCounts]);
+
+  const handleExport = async () => {
+    setShowExportConfirm(false);
+    toast({ title: "Exporting...", description: "Your download will begin shortly." });
+    try {
+      const querySnapshot = await getDocs(collection(db, "inventory"));
+      if(querySnapshot.empty) {
+         toast({
           title: "No Data to Export",
           description: "Your inventory is empty.",
           variant: "destructive",
@@ -62,12 +78,14 @@ export default function CategoriesPage() {
         });
         return;
       }
+      
+      const inventoryData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      const blob = new Blob([storedData], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(inventoryData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'Physical_Inventory.data.json';
+      link.download = 'Physical_Inventory_Firestore.json';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -92,33 +110,52 @@ export default function CategoriesPage() {
   
   const downloadAllAsZip = async () => {
     setShowZipConfirm(false);
-    const storedData = localStorage.getItem(INVENTORY_STORAGE_KEY);
-    if (!storedData || storedData === '{}') {
-      toast({ title: "No Data", description: "There is no inventory to export.", variant: "destructive", duration: 3000 });
-      return;
-    }
-
     toast({ title: "Zipping...", description: "Your download will begin shortly." });
 
     try {
-      const inventory: InventoryData = JSON.parse(storedData);
+      const querySnapshot = await getDocs(collection(db, "inventory"));
+       if(querySnapshot.empty) {
+         toast({ title: "No Data", description: "There is no inventory to export.", variant: "destructive", duration: 3000 });
+        return;
+      }
+
       const zip = new JSZip();
 
-      for (const categoryName in inventory) {
+      // Group items by category
+      const inventoryByCategory: Record<string, any[]> = {};
+      querySnapshot.forEach(doc => {
+          const item = doc.data();
+          const category = item.category || 'Uncategorized';
+          if(!inventoryByCategory[category]) {
+              inventoryByCategory[category] = [];
+          }
+          inventoryByCategory[category].push(item);
+      });
+
+      for (const categoryName in inventoryByCategory) {
         const categoryFolder = zip.folder(categoryName.replace(/[^a-zA-Z0-9]/g, '_'));
-        const items = inventory[categoryName as CategoryName] || [];
+        const items = inventoryByCategory[categoryName] || [];
 
         if (categoryFolder && items.length > 0) {
           for (const [itemIndex, item] of items.entries()) {
-            const itemFolderName = `item_${itemIndex + 1}`;
+            const itemFolderName = `item_${itemIndex + 1}_${item.id}`;
             const itemFolder = categoryFolder.folder(itemFolderName);
 
             if (itemFolder) {
-              const descriptionText = `Accountable Officer: ${item.accountableOfficer}\nEnd-user: ${item.endUser}\nLocation: ${item.location}\nMore Details: ${item.moreDetails}`;
+              const descriptionText = `Accountable Officer: ${item.accountableOfficer}\nEnd-user: ${item.endUser}\nLocation: ${item.location}\nMore Details: ${item.moreDetails}\nStatus: ${item.status}`;
               itemFolder.file("description.txt", descriptionText);
-              for (const [photoIndex, photoDataUrl] of item.photos.entries()) {
-                const base64Data = photoDataUrl.url.split(',')[1];
-                itemFolder.file(`photo_${photoIndex + 1}.jpg`, base64Data, { base64: true });
+
+              if (item.photos && item.photos.length > 0) {
+                  for (const [photoIndex, photo] of item.photos.entries()) {
+                      try {
+                        const response = await fetch(photo.url);
+                        const blob = await response.blob();
+                        itemFolder.file(`photo_${photoIndex + 1}.jpg`, blob);
+                      } catch(e) {
+                          console.error('Could not fetch photo for zipping', e);
+                          itemFolder.file(`photo_${photoIndex + 1}_FETCH_ERROR.txt`, `URL: ${photo.url}`);
+                      }
+                  }
               }
             }
           }
@@ -135,98 +172,6 @@ export default function CategoriesPage() {
     }
   };
 
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const content = e.target?.result as string;
-          // Basic validation to check if it's a valid JSON
-          JSON.parse(content);
-          setImportData(content);
-        } catch (error) {
-          toast({
-            title: "Invalid File",
-            description: "The selected file is not a valid JSON backup file.",
-            variant: "destructive",
-            duration: 3000,
-          });
-          setImportData(null);
-        }
-      };
-      reader.readAsText(file);
-    }
-    // Reset file input to allow selecting the same file again
-    if(event.target) {
-        event.target.value = "";
-    }
-  };
-
-  const confirmImport = () => {
-    if (importData) {
-      try {
-        const localDataString = localStorage.getItem(INVENTORY_STORAGE_KEY);
-        const localData: InventoryData = localDataString ? JSON.parse(localDataString) : {};
-        const importedData: InventoryData = JSON.parse(importData);
-
-        const mergedData: InventoryData = { ...localData };
-
-        for (const category in importedData) {
-            const catName = category as CategoryName;
-            if (!mergedData[catName]) {
-                mergedData[catName] = [];
-            }
-
-            const localItems = new Map((mergedData[catName] ?? []).map(item => [item.id, item]));
-            
-            importedData[catName]?.forEach((importedItem: InventoryItem) => {
-                const localItem = localItems.get(importedItem.id);
-                if (!localItem) {
-                    // Item is new, add it
-                    localItems.set(importedItem.id, importedItem);
-                } else {
-                    // Item exists, keep the newest one based on creation or update time
-                    const localDate = new Date(localItem.updatedAt || localItem.createdAt);
-                    const importedDate = new Date(importedItem.updatedAt || importedItem.createdAt);
-
-                    if (importedDate > localDate) {
-                        localItems.set(importedItem.id, { ...localItem, ...importedItem});
-                    }
-                }
-            });
-            mergedData[catName] = Array.from(localItems.values());
-            // Sort by creation date descending
-            mergedData[catName]?.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        }
-
-        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(mergedData));
-        setImportData(null);
-        toast({
-          title: "Import Successful",
-          description: "Inventory data has been merged. The page will now reload.",
-          duration: 3000,
-        });
-        // Reload to reflect the new data
-        setTimeout(() => window.location.reload(), 1500);
-      } catch (error) {
-        console.error("Import failed", error);
-        toast({
-          title: "Import Failed",
-          description: "An error occurred while merging the data.",
-          variant: "destructive",
-          duration: 3000,
-        });
-      }
-    }
-  };
-
-
   return (
     <div className="flex min-h-screen flex-col items-center">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
@@ -236,12 +181,8 @@ export default function CategoriesPage() {
             <span className="hidden sm:inline">Back</span>
           </Button>
         </Link>
+        <h1 className="text-xl sm:text-2xl font-bold">Categories</h1>
         <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleImportClick} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
-                <Download className="sm:mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">Import</span>
-            </Button>
-            <input type="file" ref={fileInputRef} onChange={handleFileSelected} accept=".json" className="hidden" />
             <Button size="sm" onClick={() => setShowExportConfirm(true)} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground">
                 <Upload className="sm:mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">Export</span>
@@ -290,28 +231,13 @@ export default function CategoriesPage() {
             <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Physical Inventory App. All rights reserved.</p>
         </div>
       </footer>
-      
-      <AlertDialog open={!!importData} onOpenChange={(open) => !open && setImportData(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Data Merge</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will merge the data from the imported file with your current inventory. New items will be added and existing items will be updated if the imported version is newer. Are you sure you want to continue?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setImportData(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmImport}>Merge Data</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={showExportConfirm} onOpenChange={setShowExportConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Export</AlertDialogTitle>
             <AlertDialogDescription>
-              This will download a JSON file of your entire inventory. Do you want to continue?
+              This will download a JSON file of your entire inventory from Firestore. Do you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -326,7 +252,7 @@ export default function CategoriesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Zip Export</AlertDialogTitle>
             <AlertDialogDescription>
-              This will download a ZIP file of your entire inventory, including all photos. This may take a moment. Do you want to continue?
+              This will download a ZIP file of your entire inventory, including all photos from Firebase Storage. This may take a moment. Do you want to continue?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -338,3 +264,4 @@ export default function CategoriesPage() {
     </div>
   );
 }
+
