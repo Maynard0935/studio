@@ -1,7 +1,7 @@
 
 "use client";
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/contexts/auth-context';
@@ -15,9 +15,25 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LogOut, Loader2 } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const { user, loading, signInWithGoogle, signOut } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleStartInventory = () => {
+    if (user) {
+      router.push('/categories');
+    } else {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to start the inventory.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
 
   const UserMenu = () => (
     <DropdownMenu>
@@ -66,11 +82,12 @@ export default function Home() {
         <p className="text-lg text-muted-foreground mb-8 max-w-md">
           A simple and efficient way to track your physical assets. Snap photos, add descriptions, and keep your inventory up-to-date.
         </p>
-        <Link href="/categories">
-          <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg sm:text-xl px-8 py-6 sm:px-12 sm:py-8 rounded-full shadow-lg">
-            Start Inventory
-          </Button>
-        </Link>
+        <Button 
+            onClick={handleStartInventory}
+            size="lg" 
+            className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-lg sm:text-xl px-8 py-6 sm:px-12 sm:py-8 rounded-full shadow-lg">
+          Start Inventory
+        </Button>
       </main>
       <footer className="w-full border-t border-border/40">
         <div className="container mx-auto flex items-center justify-center py-4">
