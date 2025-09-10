@@ -55,7 +55,7 @@ export default function Home() {
         ) : user ? (
           <UserMenu />
         ) : (
-          <Button onClick={signInWithGoogle} className="bg-orange-500 text-black hover:bg-orange-600">
+          <Button onClick={signInWithGoogle} className="bg-accent hover:bg-accent/90 text-accent-foreground">
             Sign In with Google
           </Button>
         )}
