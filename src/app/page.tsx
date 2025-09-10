@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -54,7 +55,7 @@ export default function Home() {
         ) : user ? (
           <UserMenu />
         ) : (
-          <Button onClick={signInWithGoogle} variant="outline">
+          <Button onClick={signInWithGoogle} className="bg-orange-500 text-black hover:bg-orange-600">
             Sign In with Google
           </Button>
         )}
