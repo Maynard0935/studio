@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -37,14 +38,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: "You have successfully signed in.",
         duration: 3000,
       });
-    } catch (error) {
-      console.error("Google Sign-In Error", error);
-      toast({
-        title: "Sign-In Failed",
-        description: "Could not sign in with Google. Please try again.",
-        variant: "destructive",
-        duration: 3000,
-      });
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        console.log("Sign-in popup closed by user.");
+      } else {
+        console.error("Google Sign-In Error", error);
+        toast({
+          title: "Sign-In Failed",
+          description: "Could not sign in with Google. Please try again.",
+          variant: "destructive",
+          duration: 3000,
+        });
+      }
     } finally {
       setLoading(false);
     }
