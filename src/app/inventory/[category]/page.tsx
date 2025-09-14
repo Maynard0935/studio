@@ -479,16 +479,9 @@ export default function InventoryPage() {
                     <X className="h-8 w-8 text-white" />
                     <span className="sr-only">Close</span>
                 </DialogClose>
-                <div className="absolute top-4 right-16 z-50">
-                    <Button variant="ghost" size="icon" onClick={handleRotate} className="text-white hover:text-white hover:bg-white/10 h-10 w-10">
-                      <RotateCw className="h-6 w-6" />
-                       <span className="sr-only">Rotate</span>
-                    </Button>
-                </div>
-
-
+                
                 {selectedItemPhotos && (
-                    <Carousel setApi={setCarouselApi} className="w-full h-full flex items-center justify-center" opts={{ loop: selectedItemPhotos.length > 1, draggable: !isZoomed }}>
+                    <Carousel setApi={setCarouselApi} className="w-full h-[calc(100%-80px)] flex items-center justify-center" opts={{ loop: selectedItemPhotos.length > 1, draggable: !isZoomed }}>
                         <CarouselContent className="h-full">
                             {selectedItemPhotos.map((photo, index) => (
                                 <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
@@ -529,6 +522,13 @@ export default function InventoryPage() {
                         )}
                     </Carousel>
                 )}
+
+                <div className="absolute bottom-0 left-0 right-0 h-20 flex justify-center items-center z-50">
+                    <Button variant="ghost" size="icon" onClick={handleRotate} className="text-white hover:text-white hover:bg-white/10 h-14 w-14 rounded-full">
+                      <RotateCw className="h-8 w-8" />
+                       <span className="sr-only">Rotate</span>
+                    </Button>
+                </div>
             </DialogContent>
         </Dialog>
     </div>
