@@ -7,8 +7,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardDescription, CardFooter } from '@/components/ui/card';
-import { ArrowLeft, Plus, Camera, Trash2, Images, X, ChevronLeft, ChevronRight, Edit, Save } from 'lucide-react';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { ArrowLeft, Plus, Camera, Trash2, Images, X, ChevronLeft, ChevronRight, Edit, Save, RotateCw } from 'lucide-react';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { CATEGORIES, type CategoryName, type InventoryItem, type InventoryPhoto, type ItemStatus } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -50,6 +50,9 @@ export default function InventoryPage() {
   
   const [editedMoreDetails, setEditedMoreDetails] = useState('');
   const [editedStatus, setEditedStatus] = useState<ItemStatus | null>(null);
+  
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>()
+  const [rotation, setRotation] = useState(0);
 
   const dateTimeFormatOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -115,17 +118,39 @@ export default function InventoryPage() {
 
     fetchItems();
   }, [category, router, toast, fetchItems]);
+
+  useEffect(() => {
+    if (!carouselApi) {
+      return
+    }
+
+    const handleSelect = () => {
+      setRotation(0);
+      setIsZoomed(false);
+    }
+ 
+    carouselApi.on("select", handleSelect)
+ 
+    return () => {
+      carouselApi.off("select", handleSelect)
+    }
+  }, [carouselApi]);
   
   const openPreview = (photos: InventoryPhoto[]) => {
     if (editingItemId) return;
     setSelectedItemPhotos(photos);
     setIsZoomed(false);
     setTransform({ x: 0, y: 0 });
+    setRotation(0);
   };
   
   const closePreview = () => {
     setSelectedItemPhotos(null);
   }
+
+  const handleRotate = () => {
+    setRotation(prev => (prev + 90) % 360);
+  };
   
   const handleZoomToggle = () => {
     setIsZoomed(!isZoomed);
@@ -446,7 +471,7 @@ export default function InventoryPage() {
       </footer>
 
         <Dialog open={!!selectedItemPhotos} onOpenChange={closePreview}>
-            <DialogContent className="w-screen h-screen max-w-full max-h-full p-0 bg-black/90 flex items-center justify-center border-0">
+            <DialogContent className="w-screen h-screen max-w-full max-h-full p-0 bg-black/90 flex flex-col items-center justify-center border-0">
                 <DialogHeader className="absolute top-4 left-4 z-50">
                     <DialogTitle className="text-white">Image Preview</DialogTitle>
                 </DialogHeader>
@@ -454,9 +479,16 @@ export default function InventoryPage() {
                     <X className="h-8 w-8 text-white" />
                     <span className="sr-only">Close</span>
                 </DialogClose>
+                <div className="absolute top-4 right-16 z-50">
+                    <Button variant="ghost" size="icon" onClick={handleRotate} className="text-white hover:text-white hover:bg-white/10 h-10 w-10">
+                      <RotateCw className="h-6 w-6" />
+                       <span className="sr-only">Rotate</span>
+                    </Button>
+                </div>
+
 
                 {selectedItemPhotos && (
-                    <Carousel className="w-full h-full flex items-center justify-center" opts={{ loop: selectedItemPhotos.length > 1, draggable: !isZoomed }}>
+                    <Carousel setApi={setCarouselApi} className="w-full h-full flex items-center justify-center" opts={{ loop: selectedItemPhotos.length > 1, draggable: !isZoomed }}>
                         <CarouselContent className="h-full">
                             {selectedItemPhotos.map((photo, index) => (
                                 <CarouselItem key={index} className="h-full flex items-center justify-center overflow-hidden">
@@ -476,7 +508,7 @@ export default function InventoryPage() {
                                                 isZoomed ? "scale-[2.5] cursor-zoom-out" : "cursor-zoom-in"
                                             )}
                                             style={{
-                                                transform: isZoomed ? `scale(2.5) translate(${transform.x}%, ${transform.y}%)` : 'scale(1)',
+                                                transform: `${isZoomed ? `scale(2.5) translate(${transform.x}%, ${transform.y}%)` : 'scale(1)'} rotate(${rotation}deg)`,
                                                 transformOrigin: 'center center'
                                             }}
                                         />
@@ -502,3 +534,5 @@ export default function InventoryPage() {
     </div>
   );
 }
+
+    
