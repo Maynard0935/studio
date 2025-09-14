@@ -64,8 +64,11 @@ export default function AddItemPage() {
   const [photoToDeleteIndex, setPhotoToDeleteIndex] = useState<number | null>(null);
   const [partSelectionImage, setPartSelectionImage] = useState<string | null>(null);
   const [imageForConfirmation, setImageForConfirmation] = useState<string | null>(null);
+  const [showUnsavedChangesDialog, setShowUnsavedChangesDialog] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const hasUnsavedChanges = photos.length > 0 || moreDetails.trim() !== '' || status !== null;
 
   useEffect(() => {
     if (!category) {
@@ -78,6 +81,14 @@ export default function AddItemPage() {
         router.push('/categories');
     }
   }, [category, router, toast]);
+
+  const handleBackClick = () => {
+    if (hasUnsavedChanges) {
+      setShowUnsavedChangesDialog(true);
+    } else {
+      router.push(`/inventory/${encodeURIComponent(categoryName)}`);
+    }
+  };
 
   const handleTakePhotoClick = () => {
     if (isSaving) return;
@@ -272,12 +283,10 @@ export default function AddItemPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
-        <Link href={`/inventory/${encodeURIComponent(categoryName)}`} passHref>
-          <Button className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground" disabled={isSaving}>
+        <Button onClick={handleBackClick} className="bg-accent text-accent-foreground hover:bg-accent hover:text-accent-foreground" disabled={isSaving}>
             <ArrowLeft className="sm:mr-2" />
             <span className="hidden sm:inline">Back</span>
-          </Button>
-        </Link>
+        </Button>
         <div className="text-center">
           <h1 className="text-xl sm:text-2xl font-bold">Add Item</h1>
           <p className="text-muted-foreground text-sm sm:text-base">{category.name}</p>
@@ -394,6 +403,23 @@ export default function AddItemPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={showUnsavedChangesDialog} onOpenChange={setShowUnsavedChangesDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Are you sure you want to leave without saving? Your changes will be lost.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No, stay here</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push(`/inventory/${encodeURIComponent(categoryName)}`)}>
+              Yes, leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Dialog open={!!partSelectionImage} onOpenChange={(open) => !open && cancelPartSelection()}>
         <DialogContent>
           <DialogHeader>
@@ -416,3 +442,5 @@ export default function AddItemPage() {
     </div>
   );
 }
+
+    
