@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2, Cpu, Monitor, Keyboard, Mouse, Speaker } from 'lucide-react';
+import { ArrowLeft, Camera, Check, RefreshCw, Trash2, X, Loader2, Cpu, Monitor, Keyboard, Mouse, Speaker, Headset, Laptop, Printer, Box } from 'lucide-react';
 import { CATEGORIES, type CategoryName, type InventoryItem, type InventoryPhoto, type ItemStatus } from '@/lib/constants';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from '@/components/ui/card';
@@ -44,6 +44,10 @@ const IT_PARTS = [
     { name: 'UPS', icon: UpsIcon },
     { name: 'Speaker', icon: Speaker },
     { name: 'Camera', icon: CameraIcon },
+    { name: 'Headset', icon: Headset },
+    { name: 'Laptop', icon: Laptop },
+    { name: 'Printer', icon: Printer },
+    { name: 'Others', icon: Box },
 ] as const;
 
 export default function AddItemPage() {
