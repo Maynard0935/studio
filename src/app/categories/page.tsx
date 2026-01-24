@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Plus, FileArchive, Lock } from 'lucide-react';
+import { ArrowLeft, Plus, FileArchive } from 'lucide-react';
 import { CATEGORIES, type CategoryName, type InventoryItem } from '@/lib/constants';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -23,20 +23,16 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { db } from '@/lib/firebase';
 import { collection, getDocs } from 'firebase/firestore';
-import { useAuth } from '@/contexts/auth-context';
-import { Loader2 } from 'lucide-react';
 
 export default function CategoriesPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const { user, loading } = useAuth();
     const [inventoryCounts, setInventoryCounts] = useState<Record<CategoryName, number>>(() =>
     Object.fromEntries(CATEGORIES.map(c => [c.name, 0])) as Record<CategoryName, number>
   );
   const [showZipConfirm, setShowZipConfirm] = useState(false);
 
   const fetchInventoryCounts = useCallback(async () => {
-    if (!user) return;
     try {
         const inventoryRef = collection(db, "inventory");
         const querySnapshot = await getDocs(inventoryRef);
@@ -59,13 +55,11 @@ export default function CategoriesPage() {
             variant: "destructive",
         });
     }
-  }, [toast, user]);
+  }, [toast]);
 
   useEffect(() => {
-    if (!loading && user) {
-        fetchInventoryCounts();
-    }
-  }, [loading, user, fetchInventoryCounts]);
+    fetchInventoryCounts();
+  }, [fetchInventoryCounts]);
 
   const downloadAllAsZip = async () => {
     setShowZipConfirm(false);
@@ -130,31 +124,6 @@ export default function CategoriesPage() {
     }
   };
   
-  if (loading) {
-    return (
-        <div className="flex min-h-screen flex-col items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
-            <p className="mt-4 text-muted-foreground">Verifying access...</p>
-        </div>
-    )
-  }
-
-  if (!user) {
-    return (
-        <div className="flex min-h-screen flex-col items-center justify-center text-center p-4">
-            <Lock className="h-16 w-16 text-destructive mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-            <p className="text-muted-foreground mb-6">You must be signed in to view this page.</p>
-            <Link href="/" passHref>
-                <Button className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                    <ArrowLeft className="mr-2" />
-                    Go to Homepage
-                </Button>
-            </Link>
-        </div>
-    );
-  }
-
   return (
     <div className="flex min-h-screen flex-col items-center">
       <header className="w-full p-4 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-sm z-10 border-b">
